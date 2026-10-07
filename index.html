@@ -1,1467 +1,339 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Travel Wallet V2 Prototype</title>
-<style>
-  :root{
-    --bg:#f6f2ec;
-    --card:#ffffff;
-    --text:#142434;
-    --sub:#6f7d88;
-    --line:#e6e2dc;
-    --teal:#0f7775;
-    --teal-dark:#0c5f5d;
-    --soft:#eef3f2;
-    --danger:#d84b4b;
-    --green:#19a36d;
-    --shadow:0 12px 30px rgba(25,44,58,.08);
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;min-height:100%;background:linear-gradient(180deg,#ebeef0,#f7f3ed 35%,#ece8e2);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
-  button,input,select{font:inherit}
-  button{cursor:pointer}
-  .wrap{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:18px}
-  .phone{
-    width:min(430px,100%); background:var(--bg);
-    border-radius:34px; overflow:hidden; box-shadow:0 30px 70px rgba(23,36,48,.18);
-    border:1px solid rgba(255,255,255,.7); position:relative;
-  }
-  .screen{display:none;min-height:820px}
-  .screen.active{display:block}
-  .status{height:38px;padding:12px 24px 0;font-size:12px;font-weight:800;display:flex;justify-content:space-between}
-  .hero{
-    height:315px;
-    background:
-      linear-gradient(180deg,rgba(255,255,255,.10),rgba(10,40,55,.16)),
-      url('https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?auto=format&fit=crop&w=1000&q=80') center/cover;
-    padding:72px 28px 28px;color:#0f2230;text-align:center;
-  }
-  .hero h1{font-size:42px;line-height:1;margin:0 0 14px;font-weight:900;letter-spacing:-1.6px;text-align:center}
-  .hero p{max-width:310px;margin:0 auto;font-size:15px;line-height:1.6;text-align:center}
-  .sheet{background:var(--bg);border-radius:30px 30px 0 0;margin-top:-22px;padding:28px 28px 30px;min-height:310px}
-  .title{font-size:28px;font-weight:900;letter-spacing:-.6px;margin:0}
-  .subtitle{color:var(--sub);font-size:14px;line-height:1.55;margin-top:8px}
-  .label{font-size:13px;font-weight:800;margin:18px 0 8px}
-  .input,.select{
-    width:100%;height:54px;border:1.5px solid var(--line);border-radius:16px;background:#fff;padding:0 16px;color:var(--text);outline:none;
-  }
-  .input:focus,.select:focus{border-color:#8cbab9;box-shadow:0 0 0 4px rgba(15,119,117,.08)}
-  .btn{width:100%;height:54px;border:0;border-radius:17px;font-weight:850;margin-top:14px}
-  .btn.primary{background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;box-shadow:0 8px 20px rgba(15,119,117,.22)}
-  .btn.soft{background:#e9eeee;color:var(--text)}
-  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--text)}
-  .topbar{padding:18px 20px 14px;display:flex;align-items:center;justify-content:space-between}
-  .iconbtn{border:0;background:transparent;font-size:20px;padding:8px;border-radius:12px;color:var(--text)}
-  .profile{display:flex;align-items:center;gap:12px;margin:8px 20px 16px}
-  .avatar{width:44px;height:44px;border-radius:50%;background:#8b97a4;color:#fff;display:grid;place-items:center;font-weight:900;position:relative}
-  .dot{position:absolute;right:1px;bottom:1px;width:10px;height:10px;border-radius:50%;background:#20a66f;border:2px solid var(--bg)}
-  .actions{padding:0 20px}
-  .section{padding:0 20px}
-  .sectionhead{font-size:15px;font-weight:900;margin:24px 0 12px}
-  .wallet-card{
-    background:#fff;border-radius:18px;padding:12px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.03);
-    display:grid;grid-template-columns:74px 1fr auto;gap:12px;align-items:center;margin-bottom:12px;
-  }
-  .thumb{width:74px;height:74px;border-radius:14px;object-fit:cover}
-  .wallet-name{font-size:16px;font-weight:900}
-  .muted{color:var(--sub);font-size:12px}
-  .money{font-size:24px;font-weight:900;margin-top:6px}
-  .content{padding:0 20px 24px}
-  .balance-card{
-    border-radius:26px;padding:22px;color:#fff;position:relative;overflow:hidden;
-    background:linear-gradient(135deg,#178782,#0d6665);
-    box-shadow:0 14px 34px rgba(15,119,117,.25);
-  }
-  .balance-card:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-80px;top:-70px;background:rgba(255,255,255,.08)}
-  .balance-card .flag{font-size:18px}
-  .balance-title{font-size:12px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;opacity:.82}
-  .balance-main{font-size:38px;font-weight:950;letter-spacing:-1px;margin:8px 0 2px}
-  .balance-sub{font-size:15px;opacity:.88}
-  .progress{height:7px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden;margin:18px 0 8px}
-  .progress > div{height:100%;width:41%;background:#fff;border-radius:99px}
-  .stats{display:flex;justify-content:space-between;font-size:12px;font-weight:800}
-  .ratebox{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.2);margin-top:16px;padding-top:14px}
-  .ratebox .rate{font-size:13px;font-weight:900}
-  .quickrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
-  .quick{height:50px;border:0;border-radius:16px;background:#fff;box-shadow:var(--shadow);font-weight:850}
-  .quick.primary{background:var(--teal);color:white}
-  .panel{background:#fff;border-radius:20px;padding:16px;box-shadow:var(--shadow);margin-top:12px}
-  .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .row + .row{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
-  .pillbar{display:flex;gap:8px;margin:6px 0 18px}
-  .pill{border:0;border-radius:999px;background:#e9eeee;padding:9px 16px;font-weight:800;color:#64717d}
-  .pill.active{background:#fff;box-shadow:var(--shadow);color:var(--text)}
-  .tx{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;padding:12px 0}
-  .tx + .tx{border-top:1px solid var(--line)}
-  .txicon{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#fff1ee}
-  .neg{color:#dd4b4b;font-weight:900}
-  .pos{color:#19a36d;font-weight:900}
-  .code{text-align:center;font-size:32px;font-weight:950;letter-spacing:3px;background:#fff;padding:18px;border-radius:16px;margin:14px 0}
-  .members{display:flex}
-  .member{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:900;margin-left:-5px;border:2px solid #fff}
-  .member:first-child{margin-left:0}.m1{background:#6877b4}.m2{background:#824ca7}.m3{background:#11a39c}
-  .danger{color:var(--danger)!important}
-  .center{text-align:center}
-  .success-art{font-size:82px;text-align:center;margin:30px 0 10px}
-  .backtitle{display:flex;align-items:center;gap:8px;font-weight:900;font-size:21px}
-  .tiny{font-size:11px;color:var(--sub)}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .quickamounts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
-  .quickamt{border:0;background:#e9eeee;border-radius:13px;padding:10px 0;font-weight:850}
-  .record-card{background:#fff;border-radius:22px;padding:16px;box-shadow:var(--shadow);margin-top:14px}
-  .record-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-  .record-title h3{margin:0;font-size:17px}
-  .amount-line{display:flex;justify-content:flex-end;gap:4px;align-items:baseline}
-  .myrline{font-size:11px;color:var(--sub);margin-top:3px;text-align:right}
-  .toast{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:#162631;color:white;padding:10px 16px;border-radius:999px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;z-index:10;white-space:nowrap}
-  .toast.show{opacity:1;bottom:34px}
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Travel Wallet</title>
 
-  .switch{position:relative;display:inline-block;width:52px;height:30px;flex-shrink:0}
-  .switch input{display:none}
-  .slider{position:absolute;inset:0;background:#d8ddde;border-radius:999px;transition:.2s}
-  .slider:before{content:"";position:absolute;width:24px;height:24px;left:3px;top:3px;background:#fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:.2s}
-  .switch input:checked + .slider{background:var(--teal)}
-  .switch input:checked + .slider:before{transform:translateX(22px)}
-  .segmented{display:flex;background:#e9eeee;padding:3px;border-radius:12px}
-  .seg{border:0;background:transparent;padding:7px 11px;border-radius:9px;font-weight:900;color:var(--sub)}
-  .seg.active{background:#fff;color:var(--text);box-shadow:0 2px 7px rgba(0,0,0,.08)}
-  .wallet-manage{
-    width:100%;border:0;background:transparent;padding:14px 2px 4px;margin-top:14px;
-    display:flex;align-items:center;justify-content:space-between;text-align:left;color:var(--text)
-  }
-  .wallet-manage-framed{
-    background:var(--card);
-    border:1.5px solid var(--line);
-    border-radius:18px;
-    padding:15px 16px;
-    box-shadow:var(--shadow);
-    margin-top:16px;
-  }
-  .manage-icon{width:42px;height:42px;border-radius:14px;background:#e7efee;display:grid;place-items:center;font-size:19px;color:var(--teal)}
-  .history-day{
-    display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:4px 0 10px;
-  }
-  .history-date{font-size:18px;font-weight:950}
-  .history-total{text-align:right}
-  .history-total .tiny{display:block}
-  body.dark{background:#111820}
-  body.dark .phone{background:#172129}
-  body.dark{--bg:#172129;--card:#202d36;--text:#f3f6f7;--sub:#9eabb3;--line:#31414a;--soft:#24343d}
-  body.dark .input,body.dark .select{background:#202d36}
-  body.dark .btn.soft,body.dark .quickamt,body.dark .segmented{background:#24343d}
-  body.dark .seg.active{background:#34454f}
-  body.dark .manage-icon{background:#243b3b}
-
-
-  body.dark .hero{color:#f3f6f7}
-  body.dark .sheet{background:var(--bg)}
-  body.dark .wallet-card,
-  body.dark .panel,
-  body.dark .record-card,
-  body.dark .code{background:var(--card);color:var(--text)}
-  body.dark .wallet-card .money,
-  body.dark .wallet-name,
-  body.dark .title,
-  body.dark .backtitle,
-  body.dark .sectionhead,
-  body.dark .record-title h3,
-  body.dark .label{color:var(--text)}
-  body.dark .iconbtn{color:var(--text)}
-  body.dark .btn.ghost{background:transparent;color:var(--text);border-color:var(--line)}
-  body.dark .wallet-manage{color:var(--text)}
-  body.dark .wallet-manage-framed{background:var(--card);border-color:var(--line)}
-  body.dark .txicon{background:#2b3942}
-  body.dark .myrline,
-  body.dark .tiny,
-  body.dark .muted{color:#aeb8bf}
-  .name-edit{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:10px}
-  .name-edit .input{height:46px}
-  .name-edit button{height:46px;border:0;border-radius:13px;padding:0 16px;background:var(--teal);color:white;font-weight:900}
-  .member-list{display:flex;flex-direction:column}
-  .member-row{display:flex;align-items:center;gap:12px;padding:13px 0}
-  .member-row + .member-row{border-top:1px solid var(--line)}
-  .member-avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;flex-shrink:0}
-  .member-info{flex:1}
-  .member-name{font-weight:900}
-  .member-role{font-size:11px;color:var(--sub);margin-top:2px}
-  .topup-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-
-  .wallet-meta{display:flex;align-items:center;gap:8px;margin-top:5px;color:var(--sub);font-size:12px;font-weight:700}
-  .shared-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px;padding:11px 14px;border-radius:15px;background:rgba(15,119,117,.08);color:var(--teal);font-size:12px;font-weight:850}
-  .history-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-  .history-tab{border:0;border-radius:14px;padding:11px 12px;background:#e9eeee;color:var(--sub);font-weight:900}
-  .history-tab.active{background:var(--teal);color:white}
-  .record-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:5px}
-  .mini-action{width:28px;height:28px;border:0;background:#edf1f1;border-radius:9px;padding:0;display:grid;place-items:center;font-size:13px;font-weight:900;color:var(--text)}
-  .mini-action.danger{background:#fff0ef;color:var(--danger)}
-  .account-strip{margin:22px 20px 24px;padding:16px;border-radius:20px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow)}
-  .account-strip .account-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-  .account-strip .account-actions button{height:44px;border-radius:13px;border:0;font-weight:900}
-  .account-strip .register-btn{background:var(--teal);color:#fff}
-  .account-strip .login-btn{background:#e9eeee;color:var(--text)}
-  .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:50;align-items:center;justify-content:center;padding:20px}
-  .modal-backdrop.show{display:flex}
-  .modal-box{width:min(380px,100%);background:var(--card);color:var(--text);border-radius:22px;padding:20px;border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.22)}
-  .modal-box h3{margin:0 0 8px}
-  .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-  .modal-actions button{height:44px;border-radius:13px;border:0;font-weight:900}
-  .modal-cancel{background:#e9eeee;color:var(--text)}
-  .modal-danger{background:var(--danger);color:#fff}
-  body.dark .history-tab{background:#24343d}
-  body.dark .account-strip{background:var(--card)}
-  body.dark .account-strip .login-btn{background:#24343d;color:var(--text)}
-  body.dark .mini-action{background:#2d3a43;color:var(--text)}
-  body.dark .mini-action.danger{background:#4a2c2c;color:#ffb0aa}
-
-
-  .wallet-card{position:relative}
-  .wallet-delete{
-    position:absolute;right:10px;top:10px;width:28px;height:28px;border:0;border-radius:50%;
-    background:rgba(255,255,255,.9);color:var(--danger);font-size:15px;font-weight:900;
-    box-shadow:0 3px 10px rgba(0,0,0,.08);display:grid;place-items:center
-  }
-  body.dark .wallet-delete{background:#26343d;color:#ff9f98}
-  .shared-top{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
-    padding:11px 14px;border-radius:16px;background:rgba(15,119,117,.08);
-    color:var(--teal);font-size:12px;font-weight:900;margin-bottom:12px;
-    border:1px solid rgba(15,119,117,.12)
-  }
-  .shared-top button{border:0;background:transparent;color:inherit;font-weight:900;padding:0}
-  .record-amount-wrap{display:flex;align-items:center;justify-content:flex-end;gap:7px}
-  .record-icons{display:flex;gap:5px}
-  .record-icons .mini-action{margin:0}
-  .invite-card{
-    width:100%;border:1.5px dashed rgba(15,119,117,.35);background:rgba(15,119,117,.06);
-    border-radius:18px;padding:15px 16px;margin-top:16px;text-align:left;color:var(--text);
-    display:flex;align-items:center;justify-content:space-between;gap:12px
-  }
-  .invite-code{font-weight:950;letter-spacing:2px;color:var(--teal)}
-  .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .edit-full{grid-column:1/-1}
-
-
-  .wallet-symbol{
-    width:74px;height:74px;border-radius:18px;display:grid;place-items:center;
-    font-size:30px;color:#fff;font-weight:900;flex-shrink:0
-  }
-  .theme-picker{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-  .theme-dot{
-    width:34px;height:34px;border-radius:50%;border:3px solid transparent;
-    box-shadow:0 2px 7px rgba(0,0,0,.12)
-  }
-  .theme-dot.active{border-color:var(--text)}
-  .icon-picker{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .icon-choice{
-    width:42px;height:42px;border-radius:12px;border:1px solid var(--line);
-    background:var(--card);font-size:20px
-  }
-  .icon-choice.active{outline:2px solid var(--teal)}
-  .balance-card.themeable{transition:background .2s}
-  .modal-box .label{color:var(--text)}
-  body.dark .modal-box{background:var(--card);color:var(--text)}
-  body.dark .modal-box .input{background:#172129;color:var(--text);border-color:var(--line)}
-  body.dark .modal-cancel{background:#24343d;color:var(--text)}
-  body.dark #confirmMessage{color:#aeb8bf}
-  body.dark #editTitle, body.dark #confirmTitle{color:var(--text)}
-
-
-  .theme-picker.two-row{
-    display:grid;grid-template-columns:repeat(6,34px);gap:10px 12px;justify-content:flex-start
-  }
-  .icon-picker.two-row{
-    display:grid;grid-template-columns:repeat(6,42px);gap:8px 10px;justify-content:flex-start
-  }
-  .wallet-theme-btn{
-    background:var(--wallet-theme,#0f7775)!important;
-    color:#fff!important;
-  }
-  .balance-topup-btn{
-    background:#fff!important;
-    color:var(--wallet-theme,#0f7775)!important;
-    border:1px solid rgba(255,255,255,.75)!important;
-  }
-  .tx.no-icon{
-    grid-template-columns:1fr auto;
-  }
-  .tx.no-icon .tx-main{min-width:0}
-  .record-value{
-    display:flex;flex-direction:column;align-items:flex-end;justify-content:center;
-  }
-  .record-value .main-amount-row{
-    display:flex;align-items:center;gap:7px;
-  }
-  .record-value .myr-under{
-    margin-top:3px;
-    font-size:11px;
-    color:var(--sub);
-    text-align:right;
-    width:100%;
-  }
-
-
-  .wallet-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .show-all-wallets{
-    border:0;background:transparent;color:var(--wallet-theme,var(--teal));
-    font-size:12px;font-weight:900;padding:6px 0
-  }
-  .amount-stack{
-    display:flex;flex-direction:column;align-items:flex-end;line-height:1.15
-  }
-  .amount-stack .myr-direct{
-    margin-top:5px;font-size:11px;color:var(--sub);white-space:nowrap
-  }
-  .record-value{
-    display:flex;align-items:center;justify-content:flex-end;gap:8px
-  }
-
-
-  .share-status{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-radius:16px;margin-bottom:12px;font-size:12px;font-weight:900;border:1px solid transparent}
-  .share-status.private{background:rgba(111,125,136,.08);color:var(--sub);border-color:rgba(111,125,136,.12)}
-  .share-status.shared{background:rgba(15,119,117,.08);color:var(--teal);border-color:rgba(15,119,117,.12)}
-  .share-status.request{background:rgba(213,155,53,.12);color:#a56d12;border-color:rgba(213,155,53,.18)}
-  body.dark .share-status.request{color:#f0c46e}
-  .member-remove{width:28px;height:28px;border:0;border-radius:9px;background:#fff0ef;color:var(--danger);font-weight:900;display:grid;place-items:center}
-  body.dark .member-remove{background:#4a2c2c;color:#ffb0aa}
-  .request-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
-  .request-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-  .request-actions button{height:40px;border:0;border-radius:12px;font-weight:900}
-  .approve-btn{background:var(--teal);color:#fff}
-  .reject-btn{background:#e9eeee;color:var(--text)}
-  body.dark .reject-btn{background:#24343d;color:var(--text)}
-
-
-  .wallet-remark{font-size:11px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
-  .wallet-menu{border:0;background:transparent;color:var(--text);font-size:22px;width:36px;height:36px;border-radius:11px;display:grid;place-items:center}
-  .wallet-menu:hover{background:rgba(0,0,0,.04)}
-  body.dark .wallet-menu:hover{background:rgba(255,255,255,.05)}
-  .remark-input{resize:none;min-height:72px;padding:12px 14px}
-  @media(max-width:460px){
-    .wrap{padding:0}.phone{border-radius:0;min-height:100vh}.screen{min-height:100vh}
-  }
-</style>
-</head>
+<link href="/src/style.css" rel="stylesheet"/></head>
 <body>
 <div class="wrap">
 <div class="phone">
-
-<section id="onboarding" class="screen active">
-  <div class="hero">
-    <h1>Travel Wallet</h1>
-    <p>Keep track of your travel expenses together, anywhere in the world.</p>
-  </div>
-  <div class="sheet">
-    <h2 class="title" style="font-size:22px">What's your name?</h2>
-    <p class="subtitle">This name will be shown when you add expenses or top up.</p>
-    <input id="nameInput" class="input" placeholder="Enter your name" />
-    <button class="btn primary" onclick="startApp()">Continue</button>
-  </div>
+<section class="onboarding-screen screen active" id="onboarding">
+<div class="hero">
+<h1>Travel Wallet</h1>
+<p>Keep track of your travel expenses together, anywhere in the world.</p>
+</div>
+<div class="sheet">
+<h2 class="title" style="font-size:22px">What's your name?</h2>
+<p class="subtitle">This name will be shown when you add expenses or top up.</p>
+<input class="input" id="nameInput" placeholder="Enter your name"/>
+<button class="btn primary" onclick="startApp()">Continue</button>
+<div class="onboarding-login"><span>Already have an account?</span> <button class="text-link" onclick="toast('Login flow will be added next')">Log In</button></div></div>
 </section>
+<section class="screen" id="wallets">
 
-<section id="wallets" class="screen">
-  <div class="status"><span>9:41</span><span>●●●  Wi‑Fi  ▰</span></div>
-  <div class="topbar">
-    <h1 class="title" data-i18n="myWallets">My Wallets</h1>
-    <button class="iconbtn" onclick="go('appSettings')" aria-label="Settings">⚙️</button>
-  </div>
-  <div class="section" style="padding-top:2px">
-      <div style="font-weight:900;font-size:17px">Hi, <span id="profileName">Alex</span>!</div>
-      <div class="muted" style="margin-top:4px"><span data-i18n="walletsSubtitle">Let's manage your travel wallets.</span></div>
-    </div>
-    <div class="actions">
-    <button class="btn primary" onclick="go('create')">＋ <span data-i18n="createWallet">Create Wallet</span></button>
-    <button class="btn soft" onclick="go('join')">🔗 <span data-i18n="joinWithCode">Join with Code</span></button>
-  </div>
-  <div class="section">
-    <div class="wallet-list-head">
-      <div class="sectionhead" style="margin-bottom:12px"><span data-i18n="yourWallets">Your Wallets</span> (<span id="walletCount">4</span>)</div>
-      <button id="showAllWalletsBtn" class="show-all-wallets" onclick="toggleShowAllWallets()" style="display:none">Show all</button>
-    </div>
-    <div id="walletList"></div>
-  </div>
-
-  <div class="account-strip">
-    <div style="font-weight:900"><span data-i18n="backupSync">☁ Backup & Sync</span></div>
-    <div class="muted" style="margin-top:5px;line-height:1.45"><span data-i18n="guestDesc">Using as Guest. Register only if you want to restore your wallets on another device.</span></div>
-    <div class="account-actions">
-      <button class="register-btn" onclick="toast('Register flow will be added later')" data-i18n="registerShort">Register</button>
-      <button class="login-btn" onclick="toast('Login flow will be added later')" data-i18n="login">Log In</button>
-    </div>
-  </div>
+<div class="topbar">
+<h1 class="title" data-i18n="myWallets">My Wallets</h1>
+<button aria-label="Settings" class="iconbtn" onclick="go('appSettings')">⚙️</button>
+</div>
+<div class="section" style="padding-top:2px">
+<div style="font-weight:900;font-size:17px">Hi, <span id="profileName">Alex</span>!</div>
+<div class="muted" style="margin-top:4px"><span data-i18n="walletsSubtitle">Let's manage your travel wallets.</span></div>
+</div>
+<div class="actions">
+<button class="btn primary" onclick="go('create')">＋ <span data-i18n="createWallet">Create Wallet</span></button>
+<button class="btn soft" onclick="go('join')">🔗 <span data-i18n="joinWithCode">Join with Code</span></button>
+</div>
+<div class="section">
+<div class="wallet-list-head">
+<div class="sectionhead" style="margin-bottom:12px"><span data-i18n="yourWallets">Your Wallets</span> (<span id="walletCount">4</span>)</div>
+<button class="show-all-wallets" id="showAllWalletsBtn" onclick="toggleShowAllWallets()" style="display:none">Show all</button>
+</div>
+<div aria-live="polite" id="walletList"></div>
+</div>
+<div class="account-strip">
+<div style="font-weight:900"><span data-i18n="backupSync">☁ Backup &amp; Sync</span></div>
+<div class="muted" style="margin-top:5px;line-height:1.45"><span data-i18n="guestDesc">Using as Guest. Register only if you want to restore your wallets on another device.</span></div>
+<div class="account-actions">
+<button class="register-btn" data-i18n="registerShort" onclick="toast('Register flow will be added later')">Register</button>
+<button class="login-btn" data-i18n="login" onclick="toast('Login flow will be added later')">Log In</button>
+</div>
+</div>
 </section>
+<section class="screen" id="appSettings">
 
-<section id="appSettings" class="screen">
-  <div class="status"><span>9:41</span><span>●●●  Wi‑Fi  ▰</span></div>
-  <div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span data-i18n="settings">Settings</span></div></div>
-  <div class="content">
-    <div class="panel">
-      <div class="row">
-        <div>
-          <div style="font-weight:900" data-i18n="darkMode">Dark Mode</div>
-          <div class="muted" data-i18n="darkModeDesc">Switch between light and dark appearance.</div>
-        </div>
-        <label class="switch">
-          <input id="darkToggle" type="checkbox" onchange="toggleDark(this.checked)">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="row">
-        <div>
-          <div style="font-weight:900" data-i18n="language">Language</div>
-          <div class="muted" data-i18n="languageDesc">Choose the app language.</div>
-        </div>
-        <div class="segmented">
-          <button id="langEN" class="seg active" onclick="setLang('EN')">EN</button>
-          <button id="langCN" class="seg" onclick="setLang('CN')">CN</button>
-        </div>
-      </div>
-      <div class="row" style="display:block">
-        <div style="font-weight:900" data-i18n="changeName">Change Name</div>
-        <div class="muted" data-i18n="changeNameDesc">This name appears on expenses and shared wallet activity.</div>
-        <div class="name-edit">
-          <input id="settingsNameInput" class="input" />
-          <button onclick="changeName()" data-i18n="save">Save</button>
-        </div>
-      </div>
-    </div>
-
-    </div>
-</section>
-
-<section id="create" class="screen">
-  <div class="status"><span>9:41</span><span>●●●  Wi‑Fi  ▰</span></div>
-  <div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span data-i18n="createWallet">Create Wallet</span></div></div>
-  <div class="content">
-    <div class="label" data-i18n="walletName">Wallet Name</div>
-    <input id="walletName" class="input" value="Taiwan Trip">
-
-    <div class="grid2">
-      <div>
-        <div class="label" data-i18n="yourCurrency">Your Currency</div>
-        <select id="homeCurrency" class="select" onchange="updateCreateRate()"></select>
-      </div>
-      <div>
-        <div class="label" data-i18n="travelCurrency">Travel Currency</div>
-        <select id="travelCurrency" class="select" onchange="updateCreateRate()"></select>
-      </div>
-    </div>
-
-    <div class="grid2">
-      <div>
-        <div class="label" data-i18n="amountYourCurrency">Amount (Your Currency)</div>
-        <input id="homeAmount" class="input" type="number" placeholder="" oninput="updateCreateRate()">
-      </div>
-      <div>
-        <div class="label" data-i18n="foreignAmount">Foreign Amount</div>
-        <input id="foreignAmount" class="input" type="number" placeholder="" oninput="updateCreateRate()">
-      </div>
-    </div>
-
-    <div id="createRatePreview" class="panel" style="margin-top:16px;display:none">
-      <div class="tiny"><span data-i18n="actualExchangeRate">Actual exchange rate</span></div>
-      <div id="createRateText" style="font-weight:900;margin-top:4px"></div>
-    </div>
-
-    
-
-    <div class="label">Wallet Color</div>
-    <div class="theme-picker two-row" id="createThemePicker">
-      <button class="theme-dot active" style="background:#7C5CFC" data-color="#7C5CFC" onclick="selectCreateTheme(this)"></button>
-      <button class="theme-dot" style="background:#0F8B75" data-color="#0F8B75" onclick="selectCreateTheme(this)"></button>
-      <button class="theme-dot" style="background:#E06B65" data-color="#E06B65" onclick="selectCreateTheme(this)"></button>
-      <button class="theme-dot" style="background:#D59B35" data-color="#D59B35" onclick="selectCreateTheme(this)"></button>
-      <button class="theme-dot" style="background:#4E78C4" data-color="#4E78C4" onclick="selectCreateTheme(this)"></button>
-      <button class="theme-dot" style="background:#8A5A44" data-color="#8A5A44" onclick="selectCreateTheme(this)"></button>
-
-      <button class="theme-dot" style="background:#D14D72" data-color="#D14D72" onclick="selectCreateTheme(this)"></button>
-      <button class="theme-dot" style="background:#2F6B9A" data-color="#2F6B9A" onclick="selectCreateTheme(this)"></button>
-      <button class="theme-dot" style="background:#5B7F3A" data-color="#5B7F3A" onclick="selectCreateTheme(this)"></button>
-      <button class="theme-dot" style="background:#C16A2D" data-color="#C16A2D" onclick="selectCreateTheme(this)"></button>
-      <button class="theme-dot" style="background:#6B5A9E" data-color="#6B5A9E" onclick="selectCreateTheme(this)"></button>
-      <button class="theme-dot" style="background:#3C6E71" data-color="#3C6E71" onclick="selectCreateTheme(this)"></button>
-    </div>
-
-    <div class="label">Wallet Icon</div>
-    <div class="icon-picker two-row" id="createIconPicker">
-      <button class="icon-choice active" data-icon="🧋" onclick="selectCreateIcon(this)">🧋</button>
-      <button class="icon-choice" data-icon="🌴" onclick="selectCreateIcon(this)">🌴</button>
-      <button class="icon-choice" data-icon="✈️" onclick="selectCreateIcon(this)">✈️</button>
-      <button class="icon-choice" data-icon="🗼" onclick="selectCreateIcon(this)">🗼</button>
-      <button class="icon-choice" data-icon="🏖️" onclick="selectCreateIcon(this)">🏖️</button>
-      <button class="icon-choice" data-icon="🧳" onclick="selectCreateIcon(this)">🧳</button>
-
-      <button class="icon-choice" data-icon="🍜" onclick="selectCreateIcon(this)">🍜</button>
-      <button class="icon-choice" data-icon="🏯" onclick="selectCreateIcon(this)">🏯</button>
-      <button class="icon-choice" data-icon="🛍️" onclick="selectCreateIcon(this)">🛍️</button>
-      <button class="icon-choice" data-icon="🎡" onclick="selectCreateIcon(this)">🎡</button>
-      <button class="icon-choice" data-icon="🚆" onclick="selectCreateIcon(this)">🚆</button>
-      <button class="icon-choice" data-icon="📸" onclick="selectCreateIcon(this)">📸</button>
-    </div>
-
-
-    <button class="btn primary" onclick="createWallet()" data-i18n="createWallet">Create Wallet</button>
-  </div>
-</section>
-
-<section id="created" class="screen">
-  <div class="status"><span>9:41</span><span>●●●  Wi‑Fi  ▰</span></div>
-  <div class="content center" style="padding-top:30px">
-    <div class="success-art">🎟️</div>
-    <h1 class="title" style="font-size:25px" data-i18n="walletCreated">Wallet Created!</h1>
-    <p class="subtitle"><span data-i18n="shareCodeDesc">Share this code with your travel buddies to join this wallet.</span></p>
-    <div id="inviteCode" class="code">7KQ9XM</div>
-    <button class="btn primary" onclick="copyCode()">📋 <span data-i18n="copyCode">Copy Code</span></button>
-    <button class="btn soft" onclick="go('wallet')" data-i18n="startUsingWallet">Start Using Wallet</button>
-  </div>
-</section>
-
-<section id="join" class="screen">
-  <div class="status"><span>9:41</span><span>●●●  Wi‑Fi  ▰</span></div>
-  <div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span data-i18n="joinWallet">Join Wallet</span></div></div>
-  <div class="content" style="padding-top:70px">
-    <div class="success-art">🔗</div>
-    <h2 class="title" style="font-size:24px;text-align:center" data-i18n="enterInviteCode">Enter Invite Code</h2>
-    <p class="subtitle center"><span data-i18n="askInviteCode">Ask the wallet owner for the 6-character code.</span></p>
-    <input id="joinCode" class="input center" style="font-size:24px;font-weight:900;letter-spacing:3px;text-transform:uppercase" placeholder="ABC123" maxlength="6">
-    <button class="btn primary" onclick="joinWallet()" data-i18n="joinWallet">Join Wallet</button>
-  </div>
-</section>
-
-<section id="wallet" class="screen">
-  <div class="status"><span>9:41</span><span>●●●  Wi‑Fi  ▰</span></div>
-  <div class="topbar">
-    <div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span id="walletTitle">Taiwan Trip</span></div>
-    <button class="wallet-menu" onclick="openEditWallet()">⋯</button>
-  </div>
-  <div class="content">
-    <div id="shareStatus" class="share-status private" onclick="handleShareStatusClick()"></div>
-    <div class="balance-card themeable" id="walletBalanceCard">
-      <div class="row" style="justify-content:flex-start;gap:8px"><span id="walletFlag" class="flag">🇹🇼</span><span class="balance-title" data-i18n="currentBalance">Current Balance</span></div>
-      <div class="balance-main"><span id="remainingAmount">18,500</span> <span id="travelCode" style="font-size:15px">TWD</span></div>
-      <div class="balance-sub">≈ <span id="homeCode">MYR</span> <span id="remainingHome">2,960.00</span></div>
-      <div class="progress"><div id="spentBar"></div></div>
-      <div class="stats">
-        <div><div style="opacity:.7;font-size:10px" data-i18n="spent">SPENT</div><div><span id="spentAmount">6,500</span> <span class="travelCode2">TWD</span></div></div>
-        <div style="text-align:right"><div style="opacity:.7;font-size:10px" data-i18n="total">TOTAL</div><div><span id="totalForeign">25,000</span> <span class="travelCode2">TWD</span></div></div>
-      </div>
-      <div class="ratebox">
-        <div>
-          <div style="opacity:.7;font-size:10px;font-weight:800" data-i18n="actualExchangeRateCaps">ACTUAL EXCHANGE RATE</div>
-          <div id="actualRate" class="rate">100 TWD = MYR 16.0000</div>
-        </div>
-        <button class="quick primary balance-topup-btn" style="height:40px;padding:0 16px;box-shadow:none" onclick="openTopUp()">＋ <span data-i18n="topUp">Top Up</span></button>
-      </div>
-    </div>
+<div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span data-i18n="settings">Settings</span></div></div>
+<div class="content">
 <div class="panel">
-      <div style="font-weight:900;font-size:17px;margin-bottom:14px">🧾 <span data-i18n="recordExpense">Record Expense</span></div>
-      <div class="label" style="margin-top:0"><span data-i18n="amount">Amount</span> <span id="expenseCurrLabel" style="float:right;color:var(--teal)">TWD</span></div>
-      <input id="expenseAmount" class="input" type="number" placeholder="0.00" oninput="updateExpensePreview()">
-      <div id="expenseMyrPreview" class="tiny" style="margin-top:6px;color:var(--green);font-weight:800"></div>
-
-      <div class="label" data-i18n="note">Note</div>
-      <input id="expenseNote" class="input" placeholder="">
-      <button class="btn primary wallet-theme-btn" onclick="saveExpense()">＋ <span data-i18n="addExpense">Add Expense</span></button>
-    </div>
-
-    <div class="record-card">
-      <div class="record-title"><h3>🗂 <span data-i18n="latestRecords">Latest Records</span></h3><button class="iconbtn wallet-theme-btn" style="font-size:12px;padding:7px 11px;border-radius:10px" onclick="go('history')" data-i18n="viewAll">View all</button></div>
-      <div id="latestRecords"></div>
-    </div>
-
-    <button class="invite-card" onclick="copyWalletInvite()">
-      <div>
-        <div style="font-weight:900" data-i18n="inviteCode">Invite Code</div>
-        <div class="muted" data-i18n="tapToCopy">Tap to copy and share with your travel buddies.</div>
-      </div>
-      <div class="invite-code" id="walletInviteCode">7KQ9XM</div>
-    </button>
-  </div>
-</section>
-
-<section id="history" class="screen">
-  <div class="status"><span>9:41</span><span>●●●  Wi‑Fi  ▰</span></div>
-  <div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallet')">‹</button><span data-i18n="expenseRecords">History</span></div></div>
-  <div class="content">
-    <div class="history-tabs">
-      <button id="expenseTab" class="history-tab active" onclick="setHistoryTab('expenses')" data-i18n="expenses">Expenses</button>
-      <button id="topupTab" class="history-tab" onclick="setHistoryTab('topups')" data-i18n="topUps">Top Ups</button>
-    </div>
-    <div id="historyGroups"></div>
-  </div>
-</section>
-
-
-
-
-<section id="editWalletScreen" class="screen">
-  <div class="status"><span>9:41</span><span>●●●  Wi‑Fi  ▰</span></div>
-  <div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallet')">‹</button><span data-i18n="editWallet">Edit Wallet</span></div></div>
-  <div class="content">
-    <div class="panel">
-      <div class="label" data-i18n="walletName">Wallet Name</div>
-      <input id="editWalletName" class="input" maxlength="40">
-      <div class="label" data-i18n="remark">Remark</div>
-      <textarea id="editWalletRemark" class="input remark-input" maxlength="60"></textarea>
-
-      <div class="label" data-i18n="walletColor">Wallet Color</div>
-      <div class="theme-picker two-row" id="editThemePicker">
-        <button class="theme-dot" style="background:#7C5CFC" data-color="#7C5CFC" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#0F8B75" data-color="#0F8B75" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#E06B65" data-color="#E06B65" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#D59B35" data-color="#D59B35" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#4E78C4" data-color="#4E78C4" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#8A5A44" data-color="#8A5A44" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#D14D72" data-color="#D14D72" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#2F6B9A" data-color="#2F6B9A" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#5B7F3A" data-color="#5B7F3A" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#C16A2D" data-color="#C16A2D" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#6B5A9E" data-color="#6B5A9E" onclick="selectEditTheme(this)"></button>
-        <button class="theme-dot" style="background:#3C6E71" data-color="#3C6E71" onclick="selectEditTheme(this)"></button>
-      </div>
-
-      <div class="label" data-i18n="walletIcon">Wallet Icon</div>
-      <div class="icon-picker two-row" id="editIconPicker">
-        <button class="icon-choice" data-icon="🧋" onclick="selectEditIcon(this)">🧋</button>
-        <button class="icon-choice" data-icon="🌴" onclick="selectEditIcon(this)">🌴</button>
-        <button class="icon-choice" data-icon="✈️" onclick="selectEditIcon(this)">✈️</button>
-        <button class="icon-choice" data-icon="🗼" onclick="selectEditIcon(this)">🗼</button>
-        <button class="icon-choice" data-icon="🏖️" onclick="selectEditIcon(this)">🏖️</button>
-        <button class="icon-choice" data-icon="🧳" onclick="selectEditIcon(this)">🧳</button>
-        <button class="icon-choice" data-icon="🍜" onclick="selectEditIcon(this)">🍜</button>
-        <button class="icon-choice" data-icon="🏯" onclick="selectEditIcon(this)">🏯</button>
-        <button class="icon-choice" data-icon="🛍️" onclick="selectEditIcon(this)">🛍️</button>
-        <button class="icon-choice" data-icon="🎡" onclick="selectEditIcon(this)">🎡</button>
-        <button class="icon-choice" data-icon="🚆" onclick="selectEditIcon(this)">🚆</button>
-        <button class="icon-choice" data-icon="📸" onclick="selectEditIcon(this)">📸</button>
-      </div>
-      <button class="btn primary wallet-theme-btn" onclick="saveWalletDetails()" data-i18n="save">Save</button>
-    </div>
-  </div>
-</section>
-
-<section id="membersScreen" class="screen">
-  <div class="status"><span>9:41</span><span>●●●  Wi‑Fi  ▰</span></div>
-  <div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallet')">‹</button><span data-i18n="members">Members</span></div></div>
-  <div class="content">
-    <div id="joinRequestArea"></div>
-    <div class="panel"><div id="memberList" class="member-list"></div></div>
-  </div>
-</section>
-
-<section id="topup" class="screen">
-  <div class="status"><span>9:41</span><span>●●●  Wi‑Fi  ▰</span></div>
-  <div class="topbar">
-    <div class="backtitle"><button class="iconbtn" onclick="go('wallet')">‹</button><span data-i18n="topUp">Top Up</span></div>
-  </div>
-  <div class="content">
-    <div class="panel">
-      <div class="topup-grid">
-        <div>
-          <div class="label" style="margin-top:0" id="topUpHomeLabel">MYR</div>
-          <input id="topUpHome" class="input" type="number" placeholder="">
-        </div>
-        <div>
-          <div class="label" style="margin-top:0" id="topUpForeignLabel">TWD</div>
-          <input id="topUpForeign" class="input" type="number" placeholder="">
-        </div>
-      </div>
-      <div id="topUpRatePreview" class="tiny" style="margin-top:12px;color:var(--green);font-weight:800"></div>
-      <button class="btn primary" onclick="confirmTopUp()" data-i18n="confirmTopUp">Confirm Top Up</button>
-    </div>
-  </div>
-</section>
-
-
-
-
-
-<div id="editModal" class="modal-backdrop">
-  <div class="modal-box">
-    <h3 id="editTitle">Edit Record</h3>
-    <div id="editNoteWrap" class="edit-full">
-      <div class="label">Note</div>
-      <input id="editNote" class="input" />
-    </div>
-    <div>
-      <div class="label" id="editForeignLabel">TWD</div>
-      <input id="editForeignAmount" class="input" type="number" />
-    </div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeEdit()" data-i18n="cancel">Cancel</button>
-      <button style="border:0;border-radius:13px;font-weight:900;background:var(--teal);color:#fff" onclick="saveEdit()" data-i18n="save">Save</button>
-    </div>
-  </div>
+<div class="row">
+<div>
+<div data-i18n="darkMode" style="font-weight:900">Dark Mode</div>
+<div class="muted" data-i18n="darkModeDesc">Switch between light and dark appearance.</div>
 </div>
-
-<div id="confirmModal" class="modal-backdrop">
-  <div class="modal-box">
-    <h3 id="confirmTitle">Delete record?</h3>
-    <div id="confirmMessage" class="muted">This action cannot be undone.</div>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeConfirm()" data-i18n="cancel">Cancel</button>
-      <button id="confirmActionBtn" class="modal-danger" data-i18n="delete">Delete</button>
-    </div>
-  </div>
+<label class="switch">
+<input id="darkToggle" onchange="toggleDark(this.checked)" type="checkbox"/>
+<span class="slider"></span>
+</label>
 </div>
-
-<div id="toast" class="toast"></div>
+<div class="row">
+<div>
+<div data-i18n="language" style="font-weight:900">Language</div>
+<div class="muted" data-i18n="languageDesc">Choose the app language.</div>
+</div>
+<div class="segmented">
+<button class="seg active" id="langEN" onclick="setLang('EN')">EN</button>
+<button class="seg" id="langCN" onclick="setLang('CN')">CN</button>
 </div>
 </div>
-
-<script>
-const currencies = [
-  {code:'MYR',flag:'🇲🇾',name:'Malaysian Ringgit',dec:2},
-  {code:'THB',flag:'🇹🇭',name:'Thai Baht',dec:2},
-  {code:'SGD',flag:'🇸🇬',name:'Singapore Dollar',dec:2},
-  {code:'TWD',flag:'🇹🇼',name:'New Taiwan Dollar',dec:0},
-  {code:'JPY',flag:'🇯🇵',name:'Japanese Yen',dec:0},
-  {code:'KRW',flag:'🇰🇷',name:'South Korean Won',dec:0},
-  {code:'USD',flag:'🇺🇸',name:'US Dollar',dec:2},
-  {code:'CNY',flag:'🇨🇳',name:'Chinese Yuan',dec:2},
-  {code:'EUR',flag:'🇪🇺',name:'Euro',dec:2},
-  {code:'GBP',flag:'🇬🇧',name:'British Pound',dec:2},
-  {code:'AUD',flag:'🇦🇺',name:'Australian Dollar',dec:2},
-  {code:'CAD',flag:'🇨🇦',name:'Canadian Dollar',dec:2},
-  {code:'HKD',flag:'🇭🇰',name:'Hong Kong Dollar',dec:2},
-  {code:'IDR',flag:'🇮🇩',name:'Indonesian Rupiah',dec:0},
-  {code:'PHP',flag:'🇵🇭',name:'Philippine Peso',dec:2}
-];
-
-const wallets = {
-  taiwan:{
-    name:'Taiwan Trip', home:'MYR', foreign:'TWD', homeSpent:4000, foreignTotal:25000, remaining:18500, theme:'#7C5CFC', icon:'🧋', remark:'Family trip · Oct 2026', inviteCode:'7KQ9XM', members:['Alex','Jamie','Chris'], joinRequests:[],
-    records:[
-      {type:'topup',note:'Initial Balance',foreign:25000,my:4000,name:'Alex',date:'2 Oct 2026',time:'09:00',initial:true},
-      {type:'expense',note:'Night market',foreign:1200,my:192,name:'Alex',date:'5 Oct 2026',time:'20:15'},
-      {type:'expense',note:'Taipei Metro',foreign:150,my:24,name:'Jamie',date:'5 Oct 2026',time:'17:40'},
-      {type:'expense',note:'Bubble tea',foreign:85,my:13.60,name:'Alex',date:'5 Oct 2026',time:'15:12'},
-      {type:'expense',note:'Lunch',foreign:420,my:67.20,name:'Chris',date:'5 Oct 2026',time:'12:22'},
-      {type:'expense',note:'Convenience store',foreign:230,my:36.80,name:'Jamie',date:'5 Oct 2026',time:'09:18'},
-      {type:'expense',note:'Ximending dinner',foreign:760,my:121.60,name:'Jamie',date:'4 Oct 2026',time:'20:08'},
-      {type:'expense',note:'Souvenir',foreign:980,my:156.80,name:'Alex',date:'4 Oct 2026',time:'17:25'},
-      {type:'expense',note:'Coffee',foreign:160,my:25.60,name:'Chris',date:'4 Oct 2026',time:'15:01'},
-      {type:'expense',note:'Museum ticket',foreign:350,my:56.00,name:'Alex',date:'4 Oct 2026',time:'11:45'},
-      {type:'expense',note:'Breakfast',foreign:210,my:33.60,name:'Jamie',date:'4 Oct 2026',time:'08:32'},
-      {type:'expense',note:'Hotpot',foreign:1250,my:200.00,name:'Chris',date:'3 Oct 2026',time:'19:50'},
-      {type:'expense',note:'Taxi',foreign:420,my:67.20,name:'Alex',date:'3 Oct 2026',time:'17:16'},
-      {type:'expense',note:'Temple snacks',foreign:180,my:28.80,name:'Jamie',date:'3 Oct 2026',time:'14:38'},
-      {type:'expense',note:'Train ticket',foreign:620,my:99.20,name:'Alex',date:'3 Oct 2026',time:'10:22'},
-      {type:'expense',note:'Breakfast',foreign:190,my:30.40,name:'Chris',date:'3 Oct 2026',time:'08:10'}
-    ]
-  },
-  thailand:{
-    name:'Thailand Trip', home:'MYR', foreign:'THB', homeSpent:1375, foreignTotal:11000, remaining:6500, theme:'#0F8B75', icon:'🌴', remark:'Bangkok getaway', inviteCode:'B4N8TP', members:['Alex','Jamie'], joinRequests:[],
-    records:[
-      {type:'topup',note:'Initial Balance',foreign:9000,my:1125,name:'Alex',date:'2 Oct 2026',time:'09:00',initial:true},
-      {type:'expense',note:'Mango sticky rice',foreign:120,my:15,name:'Alex',date:'5 Oct 2026',time:'14:32'},
-      {type:'expense',note:'Grab to hotel',foreign:320,my:40,name:'Jamie',date:'5 Oct 2026',time:'12:10'},
-      {type:'expense',note:'Lunch',foreign:250,my:31.25,name:'Alex',date:'5 Oct 2026',time:'11:45'},
-      {type:'expense',note:'Drinks',foreign:230,my:28.75,name:'Chris',date:'5 Oct 2026',time:'09:20'},
-      {type:'topup',note:'Top Up',foreign:2000,my:250,name:'Alex',date:'4 Oct 2026',time:'18:30'}
-    ]
-  },
-  japan:{
-    name:'Japan Trip', home:'MYR', foreign:'JPY', homeSpent:3100, foreignTotal:102000, remaining:76800, theme:'#D14D72', icon:'🗼', remark:'Spring 2027', inviteCode:'J2M6RX', members:['Alex'], joinRequests:[],
-    records:[
-      {type:'topup',note:'Initial Balance',foreign:102000,my:3100,name:'Alex',date:'1 Oct 2026',time:'10:00',initial:true}
-    ]
-  },
-  korea:{
-    name:'Seoul Trip', home:'MYR', foreign:'KRW', homeSpent:2200, foreignTotal:735000, remaining:612000, theme:'#4E78C4', icon:'🍜', remark:'Food + shopping', inviteCode:'S9K3LA', members:['Alex','Jamie'], joinRequests:['Chris'],
-    records:[
-      {type:'topup',note:'Initial Balance',foreign:735000,my:2200,name:'Alex',date:'1 Oct 2026',time:'10:00',initial:true}
-    ]
-  }
-};
-
-let currentWalletKey='taiwan';
-
-let showAllWallets=false;
-
-function walletEntries(){
-  return Object.entries(wallets);
-}
-
-function renderWalletList(){
-  const list=document.getElementById('walletList');
-  const count=document.getElementById('walletCount');
-  const showBtn=document.getElementById('showAllWalletsBtn');
-  if(!list) return;
-  const entries=walletEntries();
-  if(count) count.textContent=entries.length;
-  const visible=showAllWallets ? entries : entries.slice(0,3);
-  list.innerHTML=visible.map(([key,w])=>{
-    const homePerForeign=w.foreignTotal ? w.homeSpent/w.foreignTotal : 0;
-    const homeValue=w.remaining*homePerForeign;
-    const members=w.members||[userName];
-    const sharedMeta=members.length>1 ? `<span>•</span><span>${members.length} ${i18n[currentLang].membersLower}</span>` : '';
-    return `<div class="wallet-card" onclick="loadWallet('${key}')">
-      <button class="wallet-delete" onclick="event.stopPropagation();askDeleteWallet('${key}')">✕</button>
-      <div class="wallet-symbol" style="background:${w.theme||'#0F7775'}">${w.icon||'🧳'}</div>
-      <div>
-        <div class="wallet-name">${escapeHtml(w.name)}</div>
-        ${w.remark ? `<div class="wallet-remark">${escapeHtml(w.remark)}</div>` : ''}
-        <div class="wallet-meta"><span>${w.foreign}</span>${sharedMeta}</div>
-        <div class="money">${fmt(w.foreign,w.remaining)}</div>
-        <div class="muted">≈ ${w.home} ${fmt(w.home,homeValue)}</div>
-      </div>
-      <div style="padding-right:4px">›</div>
-    </div>`;
-  }).join('');
-  if(showBtn){
-    if(entries.length>3){
-      showBtn.style.display='block';
-      showBtn.textContent=showAllWallets ? (currentLang==='CN'?'收起':'Collapse') : (currentLang==='CN'?'查看全部':'Show all');
-    } else showBtn.style.display='none';
-  }
-}
-
-function toggleShowAllWallets(){
-  showAllWallets=!showAllWallets;
-  renderWalletList();
-}
-
-
-let selectedCreateTheme='#7C5CFC';
-let selectedCreateIcon='🧋';
-
-function selectCreateTheme(btn){
-  selectedCreateTheme=btn.dataset.color;
-  document.querySelectorAll('#createThemePicker .theme-dot').forEach(x=>x.classList.remove('active'));
-  btn.classList.add('active');
-}
-function selectCreateIcon(btn){
-  selectedCreateIcon=btn.dataset.icon;
-  document.querySelectorAll('#createIconPicker .icon-choice').forEach(x=>x.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-
-let currentLang='EN';
-const i18n={
-  EN:{
-    settings:'Settings',darkMode:'Dark Mode',darkModeDesc:'Switch between light and dark appearance.',
-    language:'Language',languageDesc:'Choose the app language.',
-    changeName:'Change Name',changeNameDesc:'This name appears on expenses and shared wallet activity.',
-    save:'Save',account:'Account',
-    accountDesc:'You can use Travel Wallet without registering. Registering is recommended if you want to restore your wallets on another device or avoid losing access when browser data is cleared.',
-    register:'Register Account',login:'Log In',topUp:'Top Up',confirmTopUp:'Confirm Top Up',
-    walletSettings:'Wallet Settings',inviteCode:'🔀 Invite Code',members:'Members',owner:'Owner',member:'Member',
-    deleteWallet:'🗑 Delete Wallet',expenseRecords:'Expense Records',
-    myWallets:'My Wallets',walletsSubtitle:"Let's manage your travel wallets.",createWallet:'Create Wallet',
-    joinWithCode:'Join with Code',yourWallets:'Your Wallets',backupSync:'☁ Backup & Sync',
-    guestDesc:'Using as Guest. Register only if you want to restore your wallets on another device.',
-    registerShort:'Register',walletName:'Wallet Name',yourCurrency:'Your Currency',travelCurrency:'Travel Currency',
-    amountYourCurrency:'Amount (Your Currency)',foreignAmount:'Foreign Amount',actualExchangeRate:'Actual exchange rate',
-    walletCreated:'Wallet Created!',shareCodeDesc:'Share this code with your travel buddies to join this wallet.',
-    copyCode:'Copy Code',startUsingWallet:'Start Using Wallet',joinWallet:'Join Wallet',
-    enterInviteCode:'Enter Invite Code',askInviteCode:'Ask the wallet owner for the 6-character code.',
-    currentBalance:'Current Balance',spent:'SPENT',total:'TOTAL',actualExchangeRateCaps:'ACTUAL EXCHANGE RATE',
-    sharedWith:'Shared with',membersLower:'members',recordExpense:'Record Expense',amount:'Amount',note:'Note',
-    addExpense:'Add Expense',latestRecords:'Latest Records',viewAll:'View all',manageWallet:'Manage this wallet',
-    expenses:'Expenses',topUps:'Top Ups',tapToCopy:'Tap to copy and share with your travel buddies.',inviteCode:'Invite Code'
-    ,cancel:'Cancel',delete:'Delete',editExpense:'Edit Expense',editTopUp:'Edit Top Up',
-    deleteExpense:'Delete expense?',deleteTopUp:'Delete top up?',deleteWalletQ:'Delete wallet?',
-    cannotUndo:'This action cannot be undone.',recordUpdated:'Record updated',
-    walletColor:'Wallet Color',walletIcon:'Wallet Icon',private:'Private',requestToJoin:'request to join',requestsToJoin:'requests to join',approve:'Approve',reject:'Reject',removeMember:'Remove member',remark:'Remark',editWallet:'Edit Wallet'
-  },
-  CN:{
-    settings:'设置',darkMode:'深色模式',darkModeDesc:'切换浅色与深色显示。',
-    language:'语言',languageDesc:'选择 App 使用的语言。',
-    changeName:'更换名字',changeNameDesc:'这个名字会显示在消费记录和共享钱包活动中。',
-    save:'保存',account:'账号',
-    accountDesc:'不注册也可以使用 Travel Wallet。建议注册账号，以便在其他设备恢复钱包，或避免清除浏览器资料后失去钱包访问权限。',
-    register:'注册账号',login:'登入',topUp:'充值',confirmTopUp:'确认充值',
-    walletSettings:'钱包设置',inviteCode:'🔀 邀请代码',members:'成员',owner:'创建者',member:'成员',
-    deleteWallet:'🗑 删除钱包',expenseRecords:'消费记录',
-    myWallets:'我的钱包',walletsSubtitle:'管理你的旅行钱包。',createWallet:'创建钱包',
-    joinWithCode:'使用代码加入',yourWallets:'你的钱包',backupSync:'☁ 备份与同步',
-    guestDesc:'目前以访客身份使用。只有在你想跨设备恢复钱包时才需要注册。',
-    registerShort:'注册',walletName:'钱包名称',yourCurrency:'你的货币',travelCurrency:'旅行货币',
-    amountYourCurrency:'金额（你的货币）',foreignAmount:'外币金额',actualExchangeRate:'实际兑换汇率',
-    walletCreated:'钱包已创建！',shareCodeDesc:'把这个代码分享给旅伴，让他们加入这个钱包。',
-    copyCode:'复制代码',startUsingWallet:'开始使用钱包',joinWallet:'加入钱包',
-    enterInviteCode:'输入邀请码',askInviteCode:'向钱包创建者获取 6 位代码。',
-    currentBalance:'当前余额',spent:'已消费',total:'总额',actualExchangeRateCaps:'实际兑换汇率',
-    sharedWith:'与',membersLower:'位成员共享',recordExpense:'记录消费',amount:'金额',note:'备注',
-    addExpense:'添加消费',latestRecords:'最新记录',viewAll:'查看全部',manageWallet:'管理这个钱包',
-    expenses:'消费',topUps:'充值',tapToCopy:'点击即可复制并分享给旅伴。',inviteCode:'邀请码'
-    ,cancel:'取消',delete:'删除',editExpense:'编辑消费',editTopUp:'编辑充值',
-    deleteExpense:'删除这笔消费？',deleteTopUp:'删除这笔充值？',deleteWalletQ:'删除钱包？',
-    cannotUndo:'此操作无法撤销。',recordUpdated:'记录已更新',
-    walletColor:'钱包颜色',walletIcon:'钱包图标',private:'私人',requestToJoin:'个加入申请',requestsToJoin:'个加入申请',approve:'批准',reject:'拒绝',removeMember:'移除成员',remark:'备注',editWallet:'编辑钱包'
-  }
-};
-
-let userName='Alex';
-
-function go(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  const target=document.getElementById(id);
-  if(!target) return;
-  target.classList.add('active');
-  if(id==='appSettings'){
-    const nameInput=document.getElementById('settingsNameInput');
-    if(nameInput) nameInput.value=userName;
-  }
-  window.scrollTo(0,0);
-}
-
-function startApp(){
-  const v=document.getElementById('nameInput').value.trim();
-  userName=v||'Alex';
-  document.getElementById('profileName').textContent=userName;
-  go('wallets');
-}
-
-function populateCurrencies(){
-  const home=document.getElementById('homeCurrency');
-  const travel=document.getElementById('travelCurrency');
-  currencies.forEach(c=>{
-    home.insertAdjacentHTML('beforeend',`<option value="${c.code}">${c.flag} ${c.code}</option>`);
-    travel.insertAdjacentHTML('beforeend',`<option value="${c.code}">${c.flag} ${c.code}</option>`);
-  });
-  home.value='MYR'; travel.value='TWD';
-}
-
-
-
-function generateInviteCode(){
-  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code='';
-  for(let i=0;i<6;i++) code+=chars[Math.floor(Math.random()*chars.length)];
-  return code;
-}
-let selectedEditTheme='#7C5CFC';
-let selectedEditIcon='🧋';
-
-function openEditWallet(){
-  const w=wallets[currentWalletKey]; if(!w) return;
-  document.getElementById('editWalletName').value=w.name||'';
-  document.getElementById('editWalletRemark').value=w.remark||'';
-  selectedEditTheme=w.theme||'#7C5CFC';
-  selectedEditIcon=w.icon||'🧳';
-  document.querySelectorAll('#editThemePicker .theme-dot').forEach(btn=>btn.classList.toggle('active',btn.dataset.color===selectedEditTheme));
-  document.querySelectorAll('#editIconPicker .icon-choice').forEach(btn=>btn.classList.toggle('active',btn.dataset.icon===selectedEditIcon));
-  go('editWalletScreen');
-}
-function selectEditTheme(btn){
-  selectedEditTheme=btn.dataset.color;
-  document.querySelectorAll('#editThemePicker .theme-dot').forEach(x=>x.classList.remove('active'));
-  btn.classList.add('active');
-}
-function selectEditIcon(btn){
-  selectedEditIcon=btn.dataset.icon;
-  document.querySelectorAll('#editIconPicker .icon-choice').forEach(x=>x.classList.remove('active'));
-  btn.classList.add('active');
-}
-function saveWalletDetails(){
-  const w=wallets[currentWalletKey]; if(!w) return;
-  const name=document.getElementById('editWalletName').value.trim();
-  if(name) w.name=name;
-  w.remark=document.getElementById('editWalletRemark').value.trim();
-  w.theme=selectedEditTheme;
-  w.icon=selectedEditIcon;
-  renderWallet(); renderWalletList(); go('wallet');
-  toast(currentLang==='CN'?'钱包已更新':'Wallet updated');
-}
-
-function shadeColor(hex,percent){
-  const f=parseInt(hex.slice(1),16),t=percent<0?0:255,p=Math.abs(percent)/100;
-  const R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
-  return "#"+(0x1000000+(Math.round((t-R)*p)+R)*0x10000+(Math.round((t-G)*p)+G)*0x100+(Math.round((t-B)*p)+B)).toString(16).slice(1);
-}
-
-function getCurrency(code){return currencies.find(c=>c.code===code)||currencies[0]}
-function fmt(code,n){
-  const c=getCurrency(code); return Number(n).toLocaleString('en-MY',{minimumFractionDigits:c.dec,maximumFractionDigits:c.dec});
-}
-function rateUnit(code){
-  return ['TWD','JPY','KRW','IDR'].includes(code)?100:1;
-}
-
-function updateCreateRate(){
-  const h=document.getElementById('homeCurrency').value;
-  const f=document.getElementById('travelCurrency').value;
-  const ha=parseFloat(document.getElementById('homeAmount').value);
-  const fa=parseFloat(document.getElementById('foreignAmount').value);
-  const box=document.getElementById('createRatePreview');
-  if(ha>0 && fa>0){
-    const unit=rateUnit(f);
-    const r=ha/fa*unit;
-    document.getElementById('createRateText').textContent=`${unit} ${f} = ${h} ${r.toFixed(4)}`;
-    box.style.display='block';
-  }else box.style.display='none';
-}
-
-function createWallet(){
-  const name=document.getElementById('walletName').value.trim()||'New Wallet';
-  const home=document.getElementById('homeCurrency').value;
-  const foreign=document.getElementById('travelCurrency').value;
-  const homeAmt=parseFloat(document.getElementById('homeAmount').value)||0;
-  const foreignAmt=parseFloat(document.getElementById('foreignAmount').value)||0;
-  if(!homeAmt || !foreignAmt){toast('Enter both currency amounts'); return;}
-  const remark=document.getElementById('walletRemark').value.trim();
-  const walletKey='wallet_'+Date.now();
-  wallets[walletKey]={name,home,foreign,homeSpent:homeAmt,foreignTotal:foreignAmt,remaining:foreignAmt,theme:selectedCreateTheme,icon:selectedCreateIcon,remark,inviteCode:generateInviteCode(),members:[userName],joinRequests:[],records:[{type:'topup',note:'Initial Balance',foreign:foreignAmt,my:homeAmt,name:userName,date:'5 Oct 2026',time:'Now',initial:true}]};
-  currentWalletKey=walletKey;
-  renderWalletList();
-  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code='';for(let i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
-  document.getElementById('inviteCode').textContent=code;
-  renderWallet();
-  go('created');
-}
-
-function loadWallet(key){currentWalletKey=key;renderWallet();go('wallet')}
-
-function renderWallet(){
-  const w=wallets[currentWalletKey];
-  if(!w) return;
-  const fc=getCurrency(w.foreign);
-  document.documentElement.style.setProperty('--wallet-theme',w.theme||'#0F7775');
-  const balanceCard=document.getElementById('walletBalanceCard');
-  if(balanceCard) balanceCard.style.background=`linear-gradient(135deg, ${w.theme||'#0F7775'}, ${shadeColor(w.theme||'#0F7775',-22)})`;
-  document.getElementById('walletTitle').textContent=w.name;
-  const inviteEl=document.getElementById('walletInviteCode'); if(inviteEl) inviteEl.textContent=w.inviteCode||'';
-  document.getElementById('walletFlag').textContent=fc.flag;
-  document.getElementById('travelCode').textContent=w.foreign;
-  document.querySelectorAll('.travelCode2').forEach(x=>x.textContent=w.foreign);
-  document.getElementById('homeCode').textContent=w.home;
-  document.getElementById('remainingAmount').textContent=fmt(w.foreign,w.remaining);
-  document.getElementById('totalForeign').textContent=fmt(w.foreign,w.foreignTotal);
-  const spent=w.foreignTotal-w.remaining;
-  document.getElementById('spentAmount').textContent=fmt(w.foreign,spent);
-  const homePerForeign=w.homeSpent/w.foreignTotal;
-  document.getElementById('remainingHome').textContent=fmt(w.home,w.remaining*homePerForeign);
-  document.getElementById('spentBar').style.width=Math.min(100,(spent/w.foreignTotal)*100)+'%';
-  const unit=rateUnit(w.foreign);
-  const rate=homePerForeign*unit;
-  const rateText=`${unit} ${w.foreign} = ${w.home} ${rate.toFixed(4)}`;
-  document.getElementById('actualRate').textContent=rateText;
-  document.getElementById('expenseCurrLabel').textContent=w.foreign;
-  updateExpensePreview();
-  renderShareStatus();
-  renderRecords();
-  renderShareStatus();
-  renderMembers();
-  renderWalletList();
-}
-
-function updateExpensePreview(){
-  const w=wallets[currentWalletKey];
-  const amt=parseFloat(document.getElementById('expenseAmount').value);
-  const el=document.getElementById('expenseMyrPreview');
-  if(amt>0){
-    const my=amt*(w.homeSpent/w.foreignTotal);
-    el.textContent=`≈ ${w.home} ${fmt(w.home,my)}`;
-  }else el.textContent='';
-}
-
-function addAmount(n){
-  const el=document.getElementById('expenseAmount');
-  el.value=(parseFloat(el.value)||0)+n;
-  updateExpensePreview();
-}
-
-function saveExpense(){
-  const w=wallets[currentWalletKey];
-  const amount=parseFloat(document.getElementById('expenseAmount').value);
-  const note=document.getElementById('expenseNote').value.trim()||'Expense';
-  if(!amount){toast('Enter an amount');return}
-  const my=amount*(w.homeSpent/w.foreignTotal);
-  w.remaining=w.remaining-amount;
-  w.records.unshift({type:'expense',note,foreign:amount,my,name:userName,date:'5 Oct 2026',time:'Now'});
-  document.getElementById('expenseAmount').value='';
-  document.getElementById('expenseNote').value='';
-  renderWallet();
-  toast('Expense added');
-}
-
-let historyTab='expenses';
-
-function setHistoryTab(tab){
-  historyTab=tab;
-  document.getElementById('expenseTab').classList.toggle('active',tab==='expenses');
-  document.getElementById('topupTab').classList.toggle('active',tab==='topups');
-  renderRecords();
-}
-
-function renderRecords(){
-  const w=wallets[currentWalletKey];
-  const latest=document.getElementById('latestRecords');
-  const historyGroups=document.getElementById('historyGroups');
-
-  const renderExpense=(r, idx)=>{
-    return `<div class="tx no-icon">
-      <div class="tx-main">
-        <div style="font-weight:850">${escapeHtml(r.note)}</div>
-        <div class="tiny">${escapeHtml(r.name)}${r.editedBy ? ` · ${currentLang==='CN'?'由':'Edited by'} ${escapeHtml(r.editedBy)}`:''}</div>
-      </div>
-      <div class="record-value">
-        <div class="amount-stack">
-          <div class="amount-line neg">-${fmt(w.foreign,r.foreign)} <span style="font-size:10px">${w.foreign}</span></div>
-          <div class="myr-direct">≈ ${w.home} ${fmt(w.home,r.my)}</div>
-        </div>
-        <div class="record-icons">
-          <button class="mini-action" title="Edit" onclick="editRecord(${idx})">✎</button>
-          <button class="mini-action danger" title="Delete" onclick="askDeleteRecord(${idx})">✕</button>
-        </div>
-      </div>
-    </div>`;
-  };
-
-  const renderTopup=(r, idx)=>{
-    const unit=rateUnit(w.foreign);
-    const rate=(r.my/r.foreign)*unit;
-    return `<div class="tx no-icon">
-      <div class="tx-main">
-        <div style="font-weight:850">${escapeHtml(r.note)}</div>
-        <div class="tiny">${escapeHtml(r.name)} · ${escapeHtml(r.date||'')}${r.editedBy ? ` · ${currentLang==='CN'?'由':'Edited by'} ${escapeHtml(r.editedBy)}`:''}</div>
-        <div class="tiny" style="margin-top:3px">${unit} ${w.foreign} = ${w.home} ${rate.toFixed(4)}</div>
-      </div>
-      <div class="record-value">
-        <div class="amount-stack">
-          <div class="amount-line pos">+${fmt(w.foreign,r.foreign)} <span style="font-size:10px">${w.foreign}</span></div>
-          <div class="myr-direct">${w.home} ${fmt(w.home,r.my)}</div>
-        </div>
-        <div class="record-icons">
-          <button class="mini-action" title="Edit" onclick="editRecord(${idx})">✎</button>
-          <button class="mini-action danger" title="Delete" onclick="askDeleteRecord(${idx})">✕</button>
-        </div>
-      </div>
-    </div>`;
-  };
-
-  const expenseRecords=w.records.map((r,i)=>({...r,_idx:i})).filter(r=>r.type==='expense');
-  const dates=[...new Set(expenseRecords.map(r=>r.date))];
-  const latestDate=dates[0];
-  const latestDay=expenseRecords.filter(r=>r.date===latestDate);
-  latest.innerHTML=latestDay.slice(0,5).map(r=>renderExpense(r,r._idx)).join('') || '<div class="muted" style="padding:16px 0;text-align:center">No expenses yet</div>';
-
-  if(!historyGroups) return;
-
-  if(historyTab==='expenses'){
-    historyGroups.innerHTML=dates.map(date=>{
-      const day=expenseRecords.filter(r=>r.date===date);
-      const totalForeign=day.reduce((s,r)=>s+r.foreign,0);
-      const totalHome=day.reduce((s,r)=>s+r.my,0);
-      return `<div style="margin-bottom:22px">
-        <div class="history-day">
-          <div class="history-date">${date}</div>
-          <div class="history-total">
-            <span class="tiny">${currentLang==='CN'?'当日总消费':'Daily total'}</span>
-            <strong>${fmt(w.foreign,totalForeign)} ${w.foreign}</strong>
-            <div class="tiny">≈ ${w.home} ${fmt(w.home,totalHome)}</div>
-          </div>
-        </div>
-        <div class="panel" style="margin-top:0">${day.map(r=>renderExpense(r,r._idx)).join('')}</div>
-      </div>`;
-    }).join('');
-  } else {
-    const topups=w.records.map((r,i)=>({...r,_idx:i})).filter(r=>r.type==='topup');
-    historyGroups.innerHTML=topups.length
-      ? `<div class="panel" style="margin-top:0">${topups.map(r=>renderTopup(r,r._idx)).join('')}</div>`
-      : '<div class="muted" style="padding:24px 0;text-align:center">No top ups yet</div>';
-  }
-}
-
-function joinWallet(){
-  const code=document.getElementById('joinCode').value.trim().toUpperCase();
-  const match=Object.entries(wallets).find(([_,w])=>(w.inviteCode||'').toUpperCase()===code);
-  if(!match){ toast(currentLang==='CN'?'无效代码':'Invalid Code'); return; }
-  const [key,target]=match;
-  target.joinRequests=target.joinRequests||[];
-  if(!target.joinRequests.includes(userName) && !(target.members||[]).includes(userName)) target.joinRequests.push(userName);
-  currentWalletKey=key;
-  renderWallet(); renderWalletList();
-  toast(currentLang==='CN'?'已发送加入申请':'Join request sent');
-  setTimeout(()=>go('wallet'),400);
-}
-
-async function copyCode(){
-  const code=document.getElementById('inviteCode').textContent;
-  try{await navigator.clipboard.writeText(code);toast('Invite code copied')}
-  catch{toast('Code: '+code)}
-}
-
-
-function toggleDark(on){
-  document.body.classList.toggle('dark',on);
-}
-function setLang(lang){
-  currentLang=lang;
-  document.getElementById('langEN').classList.toggle('active',lang==='EN');
-  document.getElementById('langCN').classList.toggle('active',lang==='CN');
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const key=el.getAttribute('data-i18n');
-    if(i18n[lang][key]!==undefined) el.textContent=i18n[lang][key];
-  });
-  const profileName=document.getElementById('profileName');
-  if(profileName){
-    const parent=profileName.parentElement;
-    if(parent){
-      parent.innerHTML=(lang==='CN'?'你好，':'Hi, ') + '<span id="profileName">'+escapeHtml(userName)+'</span>!';
-    }
-  }
-  renderRecords();
-}
-
-
-
-
-
-function renderShareStatus(){
-  const w=wallets[currentWalletKey], el=document.getElementById('shareStatus');
-  if(!w || !el) return;
-  const members=w.members||[userName], requests=w.joinRequests||[];
-  el.className='share-status';
-  if(requests.length){
-    el.classList.add('request');
-    el.innerHTML=`<span>⚠ ${requests.length} ${currentLang==='CN'?'个加入申请':(requests.length===1?'request to join':'requests to join')}</span><span>›</span>`;
-  } else if(members.length<=1){
-    el.classList.add('private');
-    el.innerHTML=`<span>🔒 ${i18n[currentLang].private}</span>`;
-  } else {
-    el.classList.add('shared');
-    el.innerHTML=`<span>👥 ${i18n[currentLang].sharedWith} ${members.length} ${i18n[currentLang].membersLower}</span><span>›</span>`;
-  }
-}
-function handleShareStatusClick(){
-  const w=wallets[currentWalletKey]; if(!w) return;
-  if((w.members||[]).length<=1 && (w.joinRequests||[]).length===0) return;
-  showMembers();
-}
-function renderMembers(){
-  const w=wallets[currentWalletKey], list=document.getElementById('memberList'), requestArea=document.getElementById('joinRequestArea');
-  if(!w || !list || !requestArea) return;
-  const members=w.members||[userName];
-  list.innerHTML=members.map((name,index)=>`<div class="member-row">
-    <div class="member-avatar ${index===0?'m1':index===1?'m2':'m3'}">${(name||'?').charAt(0).toUpperCase()}</div>
-    <div class="member-info"><div class="member-name">${escapeHtml(name)}</div><div class="member-role">${index===0?i18n[currentLang].owner:i18n[currentLang].member}</div></div>
-    ${index===0?'':`<button class="member-remove" onclick="removeMember(${index})">✕</button>`}
-  </div>`).join('');
-  const requests=w.joinRequests||[];
-  requestArea.innerHTML=requests.map((name,index)=>`<div class="request-card">
-    <div style="font-weight:900">${escapeHtml(name)}</div>
-    <div class="muted" style="margin-top:3px">${currentLang==='CN'?'请求加入这个钱包':'Wants to join this wallet'}</div>
-    <div class="request-actions">
-      <button class="approve-btn" onclick="approveJoinRequest(${index})">${i18n[currentLang].approve}</button>
-      <button class="reject-btn" onclick="rejectJoinRequest(${index})">${i18n[currentLang].reject}</button>
-    </div>
-  </div>`).join('');
-}
-function approveJoinRequest(index){
-  const w=wallets[currentWalletKey]; if(!w) return;
-  const name=(w.joinRequests||[])[index]; if(!name) return;
-  w.members=w.members||[userName]; w.members.push(name); w.joinRequests.splice(index,1);
-  renderMembers(); renderShareStatus(); renderWalletList();
-}
-function rejectJoinRequest(index){
-  const w=wallets[currentWalletKey]; if(!w) return;
-  w.joinRequests.splice(index,1); renderMembers(); renderShareStatus(); renderWalletList();
-}
-function removeMember(index){
-  const w=wallets[currentWalletKey]; if(!w || index===0) return;
-  w.members.splice(index,1); renderMembers(); renderShareStatus(); renderWalletList();
-}
-
-function showMembers(){
-  renderMembers();
-  go('membersScreen');
-}
-
-async function copyWalletInvite(){
-  const w=wallets[currentWalletKey];
-  const code=w?.inviteCode||'';
-  try{ await navigator.clipboard.writeText(code); toast(currentLang==='CN'?'邀请码已复制':'Invite code copied'); }
-  catch{ toast(code); }
-}
-
-let pendingDeleteWalletKey=null;
-function askDeleteWallet(key){
-  pendingDeleteWalletKey=key;
-  const w=wallets[key];
-  document.getElementById('confirmTitle').textContent=i18n[currentLang].deleteWalletQ;
-  document.getElementById('confirmMessage').textContent=currentLang==='CN'
-    ? `确定要删除 ${w?.name||''} 吗？${i18n[currentLang].cannotUndo}`
-    : `Delete ${w?.name||''}? ${i18n[currentLang].cannotUndo}`;
-  document.getElementById('confirmActionBtn').onclick=confirmDeleteWallet;
-  document.getElementById('confirmModal').classList.add('show');
-  setLang(currentLang);
-}
-
-function confirmDeleteWallet(){
-  if(!pendingDeleteWalletKey) return;
-  delete wallets[pendingDeleteWalletKey];
-  renderWalletList();
-  document.getElementById('confirmModal').classList.remove('show');
-  pendingDeleteWalletKey=null;
-  toast(currentLang==='CN'?'钱包已删除':'Wallet deleted');
-}
-
-let pendingDeleteIndex=null;
-
-let editingIndex=null;
-
-function editRecord(index){
-  const w=wallets[currentWalletKey];
-  const r=w.records[index];
-  if(!r) return;
-  editingIndex=index;
-
-  document.getElementById('editTitle').textContent=r.type==='expense'
-    ? i18n[currentLang].editExpense
-    : i18n[currentLang].editTopUp;
-
-  document.getElementById('editForeignLabel').textContent=w.foreign;
-
-  const noteWrap=document.getElementById('editNoteWrap');
-  if(r.type==='expense'){
-    noteWrap.style.display='block';
-    document.getElementById('editNote').value=r.note||'';
-  }else{
-    noteWrap.style.display='none';
-  }
-
-  document.getElementById('editForeignAmount').value=Number(r.foreign)||'';
-  document.getElementById('editModal').classList.add('show');
-  setLang(currentLang);
-}
-
-function closeEdit(){
-  document.getElementById('editModal').classList.remove('show');
-  editingIndex=null;
-}
-
-function saveEdit(){
-  if(editingIndex===null) return;
-  const w=wallets[currentWalletKey];
-  const r=w.records[editingIndex];
-  if(!r) return;
-
-  const newForeign=parseFloat(document.getElementById('editForeignAmount').value);
-  if(!newForeign) return;
-
-  if(r.type==='expense'){
-    const oldForeign=r.foreign;
-    const homePerForeign=w.homeSpent/w.foreignTotal;
-    r.note=document.getElementById('editNote').value.trim()||r.note;
-    r.foreign=newForeign;
-    r.my=newForeign*homePerForeign;
-    r.editedBy=userName;
-    w.remaining += oldForeign-newForeign;
-  }else{
-    const rate=r.my/r.foreign;
-    const newHome=newForeign*rate;
-    const dh=newHome-r.my, df=newForeign-r.foreign;
-    r.my=newHome;
-    r.foreign=newForeign;
-    r.editedBy=userName;
-    w.homeSpent+=dh;
-    w.foreignTotal+=df;
-    w.remaining+=df;
-  }
-
-  closeEdit();
-  renderWallet();
-  renderRecords();
-  toast(i18n[currentLang].recordUpdated);
-}
-
-function askDeleteRecord(index){
-  pendingDeleteIndex=index;
-  const w=wallets[currentWalletKey];
-  const r=w.records[index];
-  document.getElementById('confirmTitle').textContent=r?.type==='topup'
-    ? i18n[currentLang].deleteTopUp
-    : i18n[currentLang].deleteExpense;
-  document.getElementById('confirmMessage').textContent=i18n[currentLang].cannotUndo;
-  document.getElementById('confirmActionBtn').onclick=confirmDeleteRecord;
-  document.getElementById('confirmModal').classList.add('show');
-  setLang(currentLang);
-}
-
-function closeConfirm(){
-  document.getElementById('confirmModal').classList.remove('show');
-  pendingDeleteIndex=null;
-  pendingDeleteWalletKey=null;
-}
-
-function confirmDeleteRecord(){
-  if(pendingDeleteIndex===null) return;
-  const w=wallets[currentWalletKey];
-  const r=w.records[pendingDeleteIndex];
-  if(!r){closeConfirm();return}
-  if(r.type==='expense'){
-    w.remaining+=r.foreign;
-  }else{
-    w.homeSpent-=r.my;
-    w.foreignTotal-=r.foreign;
-    w.remaining-=r.foreign;
-  }
-  w.records.splice(pendingDeleteIndex,1);
-  closeConfirm();
-  renderWallet();
-  renderRecords();
-  toast('Record deleted');
-}
-
-function changeName(){
-  const input=document.getElementById('settingsNameInput');
-  const name=input.value.trim();
-  if(!name){toast(currentLang==='CN'?'请输入名字':'Enter a name');return}
-  userName=name;
-  document.getElementById('profileName').textContent=userName;
-  toast(currentLang==='CN'?'名字已更新':'Name updated');
-}
-function openTopUp(){
-  const w=wallets[currentWalletKey];
-  document.getElementById('topUpHomeLabel').textContent=w.home;
-  document.getElementById('topUpForeignLabel').textContent=w.foreign;
-  document.getElementById('topUpHome').value='';
-  document.getElementById('topUpForeign').value='';
-  document.getElementById('topUpRatePreview').textContent='';
-  go('topup');
-}
-function confirmTopUp(){
-  const w=wallets[currentWalletKey];
-  const home=parseFloat(document.getElementById('topUpHome').value);
-  const foreign=parseFloat(document.getElementById('topUpForeign').value);
-  if(!home || !foreign){toast(currentLang==='CN'?'请输入两个金额':'Enter both amounts');return}
-  w.homeSpent+=home;
-  w.foreignTotal+=foreign;
-  w.remaining+=foreign;
-  w.records.unshift({type:'topup',note:'Top Up',foreign,my:home,name:userName,date:'5 Oct 2026',time:'Now'});
-  renderWallet();
-  go('wallet');
-  toast(currentLang==='CN'?'充值已加入':'Top up added');
-}
-
-function toast(msg){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)
-}
-function escapeHtml(str){return String(str).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-
-populateCurrencies();
-document.getElementById('topUpHome').addEventListener('input', updateTopUpPreview);
-document.getElementById('topUpForeign').addEventListener('input', updateTopUpPreview);
-function updateTopUpPreview(){
-  const w=wallets[currentWalletKey];
-  const h=parseFloat(document.getElementById('topUpHome').value);
-  const f=parseFloat(document.getElementById('topUpForeign').value);
-  const el=document.getElementById('topUpRatePreview');
-  if(h>0 && f>0){
-    const unit=rateUnit(w.foreign);
-    el.textContent=`${unit} ${w.foreign} = ${w.home} ${(h/f*unit).toFixed(4)}`;
-  }else el.textContent='';
-}
-document.getElementById('settingsNameInput').value=userName;
-renderWalletList();
-renderWallet();
-</script>
-</body>
+<div class="row" style="display:block">
+<div data-i18n="changeName" style="font-weight:900">Change Name</div>
+<div class="muted" data-i18n="changeNameDesc">This name appears on expenses and shared wallet activity.</div>
+<div class="name-edit">
+<input class="input" id="settingsNameInput">
+<button data-i18n="save" onclick="changeName()">Save</button>
+</input></div>
+</div>
+</div>
+</div>
+</section>
+<section class="screen" id="create">
+
+<div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span data-i18n="createWallet">Create Wallet</span></div></div>
+<div class="content">
+<div class="label" data-i18n="walletName">Wallet Name</div>
+<input class="input" id="walletName" value="Taiwan Trip"/>
+<div class="grid2">
+<div>
+<div class="label" data-i18n="yourCurrency">Your Currency</div>
+<select class="select" id="homeCurrency" onchange="updateCreateRate()"></select>
+</div>
+<div>
+<div class="label" data-i18n="travelCurrency">Travel Currency</div>
+<select class="select" id="travelCurrency" onchange="updateCreateRate()"></select>
+</div>
+</div>
+<div class="grid2">
+<div>
+<div class="label" data-i18n="amountYourCurrency">Amount (Your Currency)</div>
+<input class="input" id="homeAmount" oninput="updateCreateRate()" placeholder="" type="number"/>
+</div>
+<div>
+<div class="label" data-i18n="foreignAmount">Foreign Amount</div>
+<input class="input" id="foreignAmount" oninput="updateCreateRate()" placeholder="" type="number"/>
+</div>
+</div>
+<div class="panel" id="createRatePreview" style="margin-top:16px;display:none">
+<div class="tiny"><span data-i18n="actualExchangeRate">Actual exchange rate</span></div>
+<div id="createRateText" style="font-weight:900;margin-top:4px"></div>
+</div>
+<div class="label">Wallet Color</div>
+<div class="theme-picker two-row" id="createThemePicker">
+<button class="theme-dot active" data-color="#7C5CFC" onclick="selectCreateTheme(this)" style="background:#7C5CFC"></button>
+<button class="theme-dot" data-color="#0F8B75" onclick="selectCreateTheme(this)" style="background:#0F8B75"></button>
+<button class="theme-dot" data-color="#E06B65" onclick="selectCreateTheme(this)" style="background:#E06B65"></button>
+<button class="theme-dot" data-color="#D59B35" onclick="selectCreateTheme(this)" style="background:#D59B35"></button>
+<button class="theme-dot" data-color="#4E78C4" onclick="selectCreateTheme(this)" style="background:#4E78C4"></button>
+<button class="theme-dot" data-color="#8A5A44" onclick="selectCreateTheme(this)" style="background:#8A5A44"></button>
+<button class="theme-dot" data-color="#D14D72" onclick="selectCreateTheme(this)" style="background:#D14D72"></button>
+<button class="theme-dot" data-color="#2F6B9A" onclick="selectCreateTheme(this)" style="background:#2F6B9A"></button>
+<button class="theme-dot" data-color="#5B7F3A" onclick="selectCreateTheme(this)" style="background:#5B7F3A"></button>
+<button class="theme-dot" data-color="#C16A2D" onclick="selectCreateTheme(this)" style="background:#C16A2D"></button>
+<button class="theme-dot" data-color="#6B5A9E" onclick="selectCreateTheme(this)" style="background:#6B5A9E"></button>
+<button class="theme-dot" data-color="#3C6E71" onclick="selectCreateTheme(this)" style="background:#3C6E71"></button>
+</div>
+<div class="label">Wallet Icon</div>
+<div class="icon-picker two-row" id="createIconPicker">
+<button class="icon-choice active" data-icon="🧋" onclick="selectCreateIcon(this)">🧋</button>
+<button class="icon-choice" data-icon="🌴" onclick="selectCreateIcon(this)">🌴</button>
+<button class="icon-choice" data-icon="✈️" onclick="selectCreateIcon(this)">✈️</button>
+<button class="icon-choice" data-icon="🗼" onclick="selectCreateIcon(this)">🗼</button>
+<button class="icon-choice" data-icon="🏖️" onclick="selectCreateIcon(this)">🏖️</button>
+<button class="icon-choice" data-icon="🧳" onclick="selectCreateIcon(this)">🧳</button>
+<button class="icon-choice" data-icon="🍜" onclick="selectCreateIcon(this)">🍜</button>
+<button class="icon-choice" data-icon="🏯" onclick="selectCreateIcon(this)">🏯</button>
+<button class="icon-choice" data-icon="🛍️" onclick="selectCreateIcon(this)">🛍️</button>
+<button class="icon-choice" data-icon="🎡" onclick="selectCreateIcon(this)">🎡</button>
+<button class="icon-choice" data-icon="🚆" onclick="selectCreateIcon(this)">🚆</button>
+<button class="icon-choice" data-icon="📸" onclick="selectCreateIcon(this)">📸</button>
+</div>
+<button class="btn primary" data-i18n="createWallet" onclick="createWallet()">Create Wallet</button>
+</div>
+</section>
+<section class="screen" id="created">
+
+<div class="content center" style="padding-top:30px">
+<div class="success-art">🎟️</div>
+<h1 class="title" data-i18n="walletCreated" style="font-size:25px">Wallet Created!</h1>
+<p class="subtitle"><span data-i18n="shareCodeDesc">Share this code with your travel buddies to join this wallet.</span></p>
+<div class="code" id="inviteCode">7KQ9XM</div>
+<button class="btn primary" onclick="copyCode()">📋 <span data-i18n="copyCode">Copy Code</span></button>
+<button class="btn soft" data-i18n="startUsingWallet" onclick="go('wallet')">Start Using Wallet</button>
+</div>
+</section>
+<section class="screen" id="join">
+
+<div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span data-i18n="joinWallet">Join Wallet</span></div></div>
+<div class="content" style="padding-top:70px">
+<div class="success-art">🔗</div>
+<h2 class="title" data-i18n="enterInviteCode" style="font-size:24px;text-align:center">Enter Invite Code</h2>
+<p class="subtitle center"><span data-i18n="askInviteCode">Ask the wallet owner for the 6-character code.</span></p>
+<input class="input center" id="joinCode" maxlength="6" placeholder="ABC123" style="font-size:24px;font-weight:900;letter-spacing:3px;text-transform:uppercase"/>
+<button class="btn primary" data-i18n="joinWallet" onclick="joinWallet()">Join Wallet</button>
+</div>
+</section>
+<section class="screen" id="wallet">
+
+<div class="topbar">
+<div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span id="walletTitle">Taiwan Trip</span></div>
+<button class="wallet-menu" onclick="openEditWallet()">⋯</button>
+</div>
+<div class="content">
+<div class="share-status private" id="shareStatus" onclick="handleShareStatusClick()"></div>
+<div class="balance-card themeable" id="walletBalanceCard">
+<div class="row" style="justify-content:flex-start;gap:8px"><span class="flag" id="walletFlag">🇹🇼</span><span class="balance-title" data-i18n="currentBalance">Current Balance</span></div>
+<div class="balance-main"><span id="remainingAmount">18,500</span> <span id="travelCode" style="font-size:15px">TWD</span></div>
+<div class="balance-sub">≈ <span id="homeCode">MYR</span> <span id="remainingHome">2,960.00</span></div>
+<div class="progress"><div id="spentBar"></div></div>
+<div class="stats">
+<div><div data-i18n="spent" style="opacity:.7;font-size:10px">SPENT</div><div><span id="spentAmount">6,500</span> <span class="travelCode2">TWD</span></div></div>
+<div style="text-align:right"><div data-i18n="total" style="opacity:.7;font-size:10px">TOTAL</div><div><span id="totalForeign">25,000</span> <span class="travelCode2">TWD</span></div></div>
+</div>
+<div class="ratebox">
+<div>
+<div data-i18n="actualExchangeRateCaps" style="opacity:.7;font-size:10px;font-weight:800">ACTUAL EXCHANGE RATE</div>
+<div class="rate" id="actualRate">100 TWD = MYR 16.0000</div>
+</div>
+<button class="quick primary balance-topup-btn" onclick="openTopUp()" style="height:40px;padding:0 16px;box-shadow:none">＋ <span data-i18n="topUp">Top Up</span></button>
+</div>
+</div>
+<div class="panel">
+<div style="font-weight:900;font-size:17px;margin-bottom:14px">🧾 <span data-i18n="recordExpense">Record Expense</span></div>
+<div class="label" style="margin-top:0"><span data-i18n="amount">Amount</span> <span id="expenseCurrLabel" style="float:right;color:var(--teal)">TWD</span></div>
+<input class="input" id="expenseAmount" oninput="updateExpensePreview()" placeholder="0.00" type="number"/>
+<div class="tiny" id="expenseMyrPreview" style="margin-top:6px;color:var(--green);font-weight:800"></div>
+<div class="label" data-i18n="note">Note</div>
+<input class="input" id="expenseNote" placeholder=""/>
+<button class="btn primary wallet-theme-btn" onclick="saveExpense()">＋ <span data-i18n="addExpense">Add Expense</span></button>
+</div>
+<div class="record-card">
+<div class="record-title"><h3>🗂 <span data-i18n="latestRecords">Latest Records</span></h3><button class="iconbtn wallet-theme-btn" data-i18n="viewAll" onclick="go('history')" style="font-size:12px;padding:7px 11px;border-radius:10px">View all</button></div>
+<div id="latestRecords"></div>
+</div>
+<button class="invite-card" onclick="copyWalletInvite()">
+<div>
+<div data-i18n="inviteCode" style="font-weight:900">Invite Code</div>
+<div class="muted" data-i18n="tapToCopy">Tap to copy and share with your travel buddies.</div>
+</div>
+<div class="invite-code" id="walletInviteCode">7KQ9XM</div>
+</button>
+</div>
+</section>
+<section class="screen" id="history">
+
+<div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallet')">‹</button><span data-i18n="expenseRecords">History</span></div></div>
+<div class="content">
+<div class="history-tabs">
+<button class="history-tab active" data-i18n="expenses" id="expenseTab" onclick="setHistoryTab('expenses')">Expenses</button>
+<button class="history-tab" data-i18n="topUps" id="topupTab" onclick="setHistoryTab('topups')">Top Ups</button>
+</div>
+<div id="historyGroups"></div>
+</div>
+</section>
+<section class="screen" id="editWalletScreen">
+
+<div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallet')">‹</button><span data-i18n="editWallet">Edit Wallet</span></div></div>
+<div class="content">
+<div class="panel">
+<div class="label" data-i18n="walletName">Wallet Name</div>
+<input class="input" id="editWalletName" maxlength="40"/>
+<div class="label" data-i18n="remark">Remark</div>
+<textarea class="input remark-input" id="editWalletRemark" maxlength="60"></textarea>
+<div class="label" data-i18n="walletColor">Wallet Color</div>
+<div class="theme-picker two-row" id="editThemePicker">
+<button class="theme-dot" data-color="#7C5CFC" onclick="selectEditTheme(this)" style="background:#7C5CFC"></button>
+<button class="theme-dot" data-color="#0F8B75" onclick="selectEditTheme(this)" style="background:#0F8B75"></button>
+<button class="theme-dot" data-color="#E06B65" onclick="selectEditTheme(this)" style="background:#E06B65"></button>
+<button class="theme-dot" data-color="#D59B35" onclick="selectEditTheme(this)" style="background:#D59B35"></button>
+<button class="theme-dot" data-color="#4E78C4" onclick="selectEditTheme(this)" style="background:#4E78C4"></button>
+<button class="theme-dot" data-color="#8A5A44" onclick="selectEditTheme(this)" style="background:#8A5A44"></button>
+<button class="theme-dot" data-color="#D14D72" onclick="selectEditTheme(this)" style="background:#D14D72"></button>
+<button class="theme-dot" data-color="#2F6B9A" onclick="selectEditTheme(this)" style="background:#2F6B9A"></button>
+<button class="theme-dot" data-color="#5B7F3A" onclick="selectEditTheme(this)" style="background:#5B7F3A"></button>
+<button class="theme-dot" data-color="#C16A2D" onclick="selectEditTheme(this)" style="background:#C16A2D"></button>
+<button class="theme-dot" data-color="#6B5A9E" onclick="selectEditTheme(this)" style="background:#6B5A9E"></button>
+<button class="theme-dot" data-color="#3C6E71" onclick="selectEditTheme(this)" style="background:#3C6E71"></button>
+</div>
+<div class="label" data-i18n="walletIcon">Wallet Icon</div>
+<div class="icon-picker two-row" id="editIconPicker">
+<button class="icon-choice" data-icon="🧋" onclick="selectEditIcon(this)">🧋</button>
+<button class="icon-choice" data-icon="🌴" onclick="selectEditIcon(this)">🌴</button>
+<button class="icon-choice" data-icon="✈️" onclick="selectEditIcon(this)">✈️</button>
+<button class="icon-choice" data-icon="🗼" onclick="selectEditIcon(this)">🗼</button>
+<button class="icon-choice" data-icon="🏖️" onclick="selectEditIcon(this)">🏖️</button>
+<button class="icon-choice" data-icon="🧳" onclick="selectEditIcon(this)">🧳</button>
+<button class="icon-choice" data-icon="🍜" onclick="selectEditIcon(this)">🍜</button>
+<button class="icon-choice" data-icon="🏯" onclick="selectEditIcon(this)">🏯</button>
+<button class="icon-choice" data-icon="🛍️" onclick="selectEditIcon(this)">🛍️</button>
+<button class="icon-choice" data-icon="🎡" onclick="selectEditIcon(this)">🎡</button>
+<button class="icon-choice" data-icon="🚆" onclick="selectEditIcon(this)">🚆</button>
+<button class="icon-choice" data-icon="📸" onclick="selectEditIcon(this)">📸</button>
+</div>
+<button class="btn primary wallet-theme-btn" data-i18n="save" onclick="saveWalletDetails()">Save</button>
+</div>
+</div>
+</section>
+<section class="screen" id="membersScreen">
+
+<div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallet')">‹</button><span data-i18n="members">Members</span></div></div>
+<div class="content">
+<div id="joinRequestArea"></div>
+<div class="panel"><div class="member-list" id="memberList"></div></div>
+</div>
+</section>
+<section class="screen" id="topup">
+
+<div class="topbar">
+<div class="backtitle"><button class="iconbtn" onclick="go('wallet')">‹</button><span data-i18n="topUp">Top Up</span></div>
+</div>
+<div class="content">
+<div class="panel">
+<div class="topup-grid">
+<div>
+<div class="label" id="topUpHomeLabel" style="margin-top:0">MYR</div>
+<input class="input" id="topUpHome" placeholder="" type="number"/>
+</div>
+<div>
+<div class="label" id="topUpForeignLabel" style="margin-top:0">TWD</div>
+<input class="input" id="topUpForeign" placeholder="" type="number"/>
+</div>
+</div>
+<div class="tiny" id="topUpRatePreview" style="margin-top:12px;color:var(--green);font-weight:800"></div>
+<button class="btn primary" data-i18n="confirmTopUp" onclick="confirmTopUp()">Confirm Top Up</button>
+</div>
+</div>
+</section>
+<div class="modal-backdrop" id="editModal">
+<div class="modal-box">
+<h3 id="editTitle">Edit Record</h3>
+<div class="edit-full" id="editNoteWrap">
+<div class="label">Note</div>
+<input class="input" id="editNote">
+</input></div>
+<div>
+<div class="label" id="editForeignLabel">TWD</div>
+<input class="input" id="editForeignAmount" type="number">
+</input></div>
+<div class="modal-actions">
+<button class="modal-cancel" data-i18n="cancel" onclick="closeEdit()">Cancel</button>
+<button data-i18n="save" onclick="saveEdit()" style="border:0;border-radius:13px;font-weight:900;background:var(--teal);color:#fff">Save</button>
+</div>
+</div>
+</div>
+<div class="modal-backdrop" id="confirmModal">
+<div class="modal-box">
+<h3 id="confirmTitle">Delete record?</h3>
+<div class="muted" id="confirmMessage">This action cannot be undone.</div>
+<div class="modal-actions">
+<button class="modal-cancel" data-i18n="cancel" onclick="closeConfirm()">Cancel</button>
+<button class="modal-danger" data-i18n="delete" id="confirmActionBtn">Delete</button>
+</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+</div>
+</div>
+
+<script src="/src/main.js" type="module"></script></body>
 </html>
