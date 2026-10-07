@@ -34,7 +34,7 @@ function renderWalletList(){
   const entries=walletEntries();
   if(count) count.textContent=entries.length;
   if(entries.length===0){
-    list.innerHTML=`<div class="empty-wallets"><strong>No wallets yet</strong><span>Create your first travel wallet to get started.</span></div>`;
+    list.innerHTML=`<div class="empty-wallets"><strong>${i18n[currentLang].noWalletsYet}</strong><span>${i18n[currentLang].createFirstWallet}</span></div>`;
     if(showBtn) showBtn.style.display='none';
     return;
   }
@@ -112,7 +112,8 @@ const i18n={
     ,cancel:'Cancel',delete:'Delete',editExpense:'Edit Expense',editTopUp:'Edit Top Up',
     deleteExpense:'Delete expense?',deleteTopUp:'Delete top up?',deleteWalletQ:'Delete wallet?',
     cannotUndo:'This action cannot be undone.',recordUpdated:'Record updated',
-    walletColor:'Wallet Color',walletIcon:'Wallet Icon',private:'Private',requestToJoin:'request to join',requestsToJoin:'requests to join',approve:'Approve',reject:'Reject',removeMember:'Remove member',remark:'Remark',editWallet:'Edit Wallet'
+    walletColor:'Wallet Color',walletIcon:'Wallet Icon',private:'Private',requestToJoin:'request to join',requestsToJoin:'requests to join',approve:'Approve',reject:'Reject',removeMember:'Remove member',remark:'Remark',editWallet:'Edit Wallet',
+    loginPrompt:'Already have an account?',continue:'Continue',enterYourName:'Enter your name',heroSubtitle:'Keep track of your travel expenses together, anywhere in the world.',onboardingTitle:"What's your name?",onboardingSubtitle:'This name will be shown when you add expenses or top up.',noWalletsYet:'No wallets yet',createFirstWallet:'Create your first travel wallet to get started.'
   },
   CN:{
     settings:'设置',darkMode:'深色模式',darkModeDesc:'切换浅色与深色显示。',
@@ -138,7 +139,8 @@ const i18n={
     ,cancel:'取消',delete:'删除',editExpense:'编辑消费',editTopUp:'编辑充值',
     deleteExpense:'删除这笔消费？',deleteTopUp:'删除这笔充值？',deleteWalletQ:'删除钱包？',
     cannotUndo:'此操作无法撤销。',recordUpdated:'记录已更新',
-    walletColor:'钱包颜色',walletIcon:'钱包图标',private:'私人',requestToJoin:'个加入申请',requestsToJoin:'个加入申请',approve:'批准',reject:'拒绝',removeMember:'移除成员',remark:'备注',editWallet:'编辑钱包'
+    walletColor:'钱包颜色',walletIcon:'钱包图标',private:'私人',requestToJoin:'个加入申请',requestsToJoin:'个加入申请',approve:'批准',reject:'拒绝',removeMember:'移除成员',remark:'备注',editWallet:'编辑钱包',
+    loginPrompt:'已有账号？',continue:'继续',enterYourName:'输入你的名字',heroSubtitle:'随时随地与旅伴一起记录旅行开销。',onboardingTitle:'你叫什么名字？',onboardingSubtitle:'这个名字会显示在你添加消费或充值时。',noWalletsYet:'还没有钱包',createFirstWallet:'创建你的第一个旅行钱包，马上开始。'
   }
 };
 
@@ -171,7 +173,7 @@ function populateCurrencies(){
     home.insertAdjacentHTML('beforeend',`<option value="${c.code}">${c.flag} ${c.code}</option>`);
     travel.insertAdjacentHTML('beforeend',`<option value="${c.code}">${c.flag} ${c.code}</option>`);
   });
-  home.value='MYR'; travel.value='TWD';
+  home.value='MYR'; travel.value='MYR';
 }
 
 
@@ -440,8 +442,10 @@ function toggleDark(on){
 }
 function setLang(lang){
   currentLang=lang;
-  document.getElementById('langEN').classList.toggle('active',lang==='EN');
-  document.getElementById('langCN').classList.toggle('active',lang==='CN');
+  document.getElementById('langEN')?.classList.toggle('active',lang==='EN');
+  document.getElementById('langCN')?.classList.toggle('active',lang==='CN');
+  const onboardingLang=document.getElementById('onboardingLang');
+  if(onboardingLang) onboardingLang.value=lang;
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const key=el.getAttribute('data-i18n');
     if(i18n[lang][key]!==undefined) el.textContent=i18n[lang][key];
@@ -453,9 +457,25 @@ function setLang(lang){
       parent.innerHTML=(lang==='CN'?'你好，':'Hi, ') + '<span id="profileName">'+escapeHtml(userName)+'</span>!';
     }
   }
-  renderRecords();
+  const loginPrompt=document.getElementById('loginPromptText');
+  if(loginPrompt) loginPrompt.textContent=i18n[lang].loginPrompt;
+  const loginCta=document.getElementById('loginCta');
+  if(loginCta) loginCta.textContent=i18n[lang].login;
+  const nameInput=document.getElementById('nameInput');
+  if(nameInput) nameInput.placeholder=i18n[lang].enterYourName;
+  const heroSubtitle=document.querySelector('.hero-copy p');
+  if(heroSubtitle) heroSubtitle.textContent=i18n[lang].heroSubtitle;
+  const onboardingTitle=document.getElementById('onboardingTitle');
+  if(onboardingTitle) onboardingTitle.textContent=i18n[lang].onboardingTitle;
+  const onboardingSubtitle=document.getElementById('onboardingSubtitle');
+  if(onboardingSubtitle) onboardingSubtitle.textContent=i18n[lang].onboardingSubtitle;
+  const onboardingContinueBtn=document.getElementById('onboardingContinueBtn');
+  if(onboardingContinueBtn) onboardingContinueBtn.textContent=i18n[lang].continue;
+  renderWalletList();
+  if(currentWalletKey && wallets[currentWalletKey]){
+    renderRecords();
+  }
 }
-
 
 
 

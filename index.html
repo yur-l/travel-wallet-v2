@@ -11,16 +11,43 @@
 <div class="wrap">
 <div class="phone">
 <section class="onboarding-screen screen active" id="onboarding">
-<div class="hero">
+<div class="hero hero-illustrated">
+<div class="hero-topbar">
+<label class="lang-dropdown-wrap" for="onboardingLang">
+<select class="lang-select" id="onboardingLang" onchange="setLang(this.value)">
+<option value="EN">English</option>
+<option value="CN">中文</option>
+</select>
+</label>
+</div>
+<div class="hero-copy">
 <h1>Travel Wallet</h1>
 <p>Keep track of your travel expenses together, anywhere in the world.</p>
 </div>
-<div class="sheet">
-<h2 class="title" style="font-size:22px">What's your name?</h2>
-<p class="subtitle">This name will be shown when you add expenses or top up.</p>
+<div aria-hidden="true" class="hero-illustration">
+<div class="cloud cloud-left"></div>
+<div class="cloud cloud-right"></div>
+<div class="path-line"></div>
+<div class="plane-badge">✈️</div>
+<div class="illustration-card card-map">
+<div class="pin pin-a"></div>
+<div class="pin pin-b"></div>
+<div class="route route-one"></div>
+<div class="route route-two"></div>
+</div>
+<div class="illustration-card card-luggage">
+<div class="luggage-handle"></div>
+<div class="ticket-shape"></div>
+</div>
+</div>
+</div>
+<div class="sheet onboarding-sheet">
+<div class="sheet-grabber"></div>
+<h2 class="title" id="onboardingTitle" style="font-size:22px">What's your name?</h2>
+<p class="subtitle" id="onboardingSubtitle">This name will be shown when you add expenses or top up.</p>
 <input class="input" id="nameInput" placeholder="Enter your name"/>
-<button class="btn primary" onclick="startApp()">Continue</button>
-<div class="onboarding-login"><span>Already have an account?</span> <button class="text-link" onclick="toast('Login flow will be added next')">Log In</button></div></div>
+<button class="btn primary" id="onboardingContinueBtn" onclick="startApp()">Continue</button>
+<div class="onboarding-login"><span id="loginPromptText">Already have an account?</span> <button class="text-link" id="loginCta" onclick="toast('Login flow will be added next')">Log In</button></div></div>
 </section>
 <section class="screen" id="wallets">
 
@@ -93,7 +120,7 @@
 <div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span data-i18n="createWallet">Create Wallet</span></div></div>
 <div class="content">
 <div class="label" data-i18n="walletName">Wallet Name</div>
-<input class="input" id="walletName" value="Taiwan Trip"/>
+<input class="input" id="walletName" placeholder="e.g. Taiwan Trip"/>
 <div class="grid2">
 <div>
 <div class="label" data-i18n="yourCurrency">Your Currency</div>
@@ -107,11 +134,11 @@
 <div class="grid2">
 <div>
 <div class="label" data-i18n="amountYourCurrency">Amount (Your Currency)</div>
-<input class="input" id="homeAmount" oninput="updateCreateRate()" placeholder="" type="number"/>
+<input class="input" id="homeAmount" inputmode="decimal" oninput="updateCreateRate()" placeholder="" step="any" type="number"/>
 </div>
 <div>
 <div class="label" data-i18n="foreignAmount">Foreign Amount</div>
-<input class="input" id="foreignAmount" oninput="updateCreateRate()" placeholder="" type="number"/>
+<input class="input" id="foreignAmount" inputmode="decimal" oninput="updateCreateRate()" placeholder="" step="any" type="number"/>
 </div>
 </div>
 <div class="panel" id="createRatePreview" style="margin-top:16px;display:none">
@@ -201,7 +228,7 @@
 <div class="panel">
 <div style="font-weight:900;font-size:17px;margin-bottom:14px">🧾 <span data-i18n="recordExpense">Record Expense</span></div>
 <div class="label" style="margin-top:0"><span data-i18n="amount">Amount</span> <span id="expenseCurrLabel" style="float:right;color:var(--teal)">TWD</span></div>
-<input class="input" id="expenseAmount" oninput="updateExpensePreview()" placeholder="0.00" type="number"/>
+<input class="input" id="expenseAmount" inputmode="decimal" oninput="updateExpensePreview()" placeholder="0.00" step="any" type="number"/>
 <div class="tiny" id="expenseMyrPreview" style="margin-top:6px;color:var(--green);font-weight:800"></div>
 <div class="label" data-i18n="note">Note</div>
 <input class="input" id="expenseNote" placeholder=""/>
@@ -292,11 +319,11 @@
 <div class="topup-grid">
 <div>
 <div class="label" id="topUpHomeLabel" style="margin-top:0">MYR</div>
-<input class="input" id="topUpHome" placeholder="" type="number"/>
+<input class="input" id="topUpHome" inputmode="decimal" placeholder="" step="any" type="number"/>
 </div>
 <div>
 <div class="label" id="topUpForeignLabel" style="margin-top:0">TWD</div>
-<input class="input" id="topUpForeign" placeholder="" type="number"/>
+<input class="input" id="topUpForeign" inputmode="decimal" placeholder="" step="any" type="number"/>
 </div>
 </div>
 <div class="tiny" id="topUpRatePreview" style="margin-top:12px;color:var(--green);font-weight:800"></div>
@@ -313,7 +340,7 @@
 </input></div>
 <div>
 <div class="label" id="editForeignLabel">TWD</div>
-<input class="input" id="editForeignAmount" type="number">
+<input class="input" id="editForeignAmount" inputmode="decimal" step="any" type="number">
 </input></div>
 <div class="modal-actions">
 <button class="modal-cancel" data-i18n="cancel" onclick="closeEdit()">Cancel</button>
