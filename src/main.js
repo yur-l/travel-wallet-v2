@@ -23,6 +23,43 @@ let appState={user:null,wallets:{}};
 let wallets=appState.wallets;
 let currentWalletKey=null;
 let isRefreshing=false;
+let realtimeChannel=null;
+let realtimeRefreshTimer=null;
+
+function activeScreenId(){
+  return document.querySelector('.screen.active')?.id || '';
+}
+
+function scheduleRealtimeRefresh(){
+  if(!currentUser()) return;
+  clearTimeout(realtimeRefreshTimer);
+  realtimeRefreshTimer=setTimeout(()=>loadRemoteData({silent:true}),120);
+}
+
+async function stopRealtime(){
+  clearTimeout(realtimeRefreshTimer);
+  realtimeRefreshTimer=null;
+  if(realtimeChannel){
+    const channel=realtimeChannel;
+    realtimeChannel=null;
+    try{ await supabase.removeChannel(channel); }
+    catch(error){ console.warn('Realtime cleanup failed',error); }
+  }
+}
+
+async function startRealtime(){
+  const user=currentUser();
+  if(!user) return;
+  await stopRealtime();
+  const channel=supabase.channel(`travel-wallet-${user.id}`);
+  ['wallets','wallet_members','wallet_join_requests','transactions','profiles'].forEach(table=>{
+    channel.on('postgres_changes',{event:'*',schema:'public',table},scheduleRealtimeRefresh);
+  });
+  channel.subscribe(status=>{
+    if(status==='CHANNEL_ERROR' || status==='TIMED_OUT') console.warn('Realtime status:',status);
+  });
+  realtimeChannel=channel;
+}
 
 function currentUser(){ return appState.user; }
 function isOwner(w){ return !!(w && currentUser() && w.ownerId===currentUser().id); }
@@ -114,9 +151,14 @@ async function loadRemoteData({silent=false}={}){
       };
     }
     wallets=next; appState.wallets=wallets;
-    if(currentWalletKey && !wallets[currentWalletKey]) currentWalletKey=null;
+    const lostWallet=currentWalletKey && !wallets[currentWalletKey];
+    if(lostWallet) currentWalletKey=null;
     renderWalletList();
     if(currentWalletKey) renderWallet();
+    if(lostWallet && ['wallet','history','membersScreen','editWalletScreen','topup'].includes(activeScreenId())){
+      go('wallets');
+      toast(currentLang==='CN'?'你已无法访问这个钱包':'You no longer have access to this wallet');
+    }
   }catch(error){
     console.error(error);
     if(!silent) toast(currentLang==='CN'?'无法同步钱包资料':'Could not sync wallet data');
@@ -141,6 +183,7 @@ async function initSession(){
     document.getElementById('settingsNameInput').value=userName||'';
     if(name) go('wallets');
     await loadRemoteData({silent:true});
+    await startRealtime();
   }catch(error){
     console.error('Session init failed',error);
   }
@@ -306,6 +349,7 @@ async function startApp(){
     document.getElementById('profileName').textContent=userName;
     document.getElementById('settingsNameInput').value=userName;
     await loadRemoteData({silent:true});
+    await startRealtime();
     go('wallets');
   }catch(error){
     console.error(error);
@@ -918,12 +962,14 @@ function updateTopUpPreview(){
 }
 renderWalletList();
 initSession();
-window.addEventListener('focus',()=>{ if(currentUser()) loadRemoteData({silent:true}); });
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && currentUser()) loadRemoteData({silent:true}); });
+window.addEventListener('focus',()=>{ if(currentUser()) scheduleRealtimeRefresh(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && currentUser()) scheduleRealtimeRefresh(); });
 
 Object.assign(window, {
   walletEntries,
   loadRemoteData,
+  startRealtime,
+  stopRealtime,
   renderWalletList,
   toggleShowAllWallets,
   selectCreateTheme,

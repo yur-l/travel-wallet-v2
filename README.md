@@ -38,3 +38,13 @@ npm run dev
 5. After approval, the second user can access the same wallet and transactions.
 
 The Supabase session is persisted by `supabase-js`. Anonymous users still lose access if they explicitly sign out or erase browser/app storage; account linking/login will be added later.
+
+## Supabase database schema
+
+The canonical fresh-project schema lives at `supabase/schema.sql`. It includes the RLS and join-request fixes verified during cross-device testing. Do not rerun the full schema on the existing live database.
+
+## Realtime
+
+For the existing live Supabase project, run `supabase/realtime.sql` once in Supabase SQL Editor, then deploy this frontend build.
+
+Realtime now listens for changes to wallets, members, join requests, transactions, and profiles. The app debounces bursts of events into a single remote refresh and also refreshes when the tab/app regains focus as a fallback.
