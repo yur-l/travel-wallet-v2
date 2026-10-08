@@ -1,26 +1,40 @@
-# Travel Wallet Formal V3
+# Travel Wallet - Supabase Connected
 
-Current focus: guest-first wallet ownership and sharing-ready data model.
+This build uses Supabase for anonymous authentication, wallets, membership, join requests, and transactions.
 
-## What works now
-- Guest profile is saved on this device with `localStorage`.
-- Wallets, top ups, expenses, members, and join requests persist after refresh on the same browser/device.
-- Every wallet has an `ownerId` and member records with user IDs.
-- Owner-only controls: edit wallet, delete wallet, approve/reject join requests, remove members.
-- Joined members can use wallets they have access to, but cannot use owner-only controls.
-- Wallet list labels wallets as Owned / Joined.
-- Wallet name field starts completely blank (no placeholder).
+## Required environment variables
 
-## Important sharing limitation
-The current app is still a client-only Vite app. Invite codes can only resolve wallets available in the browser's local data. True cross-device joining needs a shared backend/database. The V3 data model is structured so a backend such as Supabase can be connected next without changing the wallet ownership/member model.
+Create `.env.local` for local development:
 
-## Run
+```bash
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
+```
+
+Do not put a Supabase secret/service-role key in this project.
+
+## Vercel
+
+In Vercel -> Project -> Settings -> Environment Variables, add:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+Add them for Production, Preview, and Development, then redeploy.
+
+## Run locally
+
 ```bash
 npm install
 npm run dev
 ```
 
-## Build
-```bash
-npm run build
-```
+## Current shared-wallet flow
+
+1. First launch -> user enters a display name -> Supabase anonymous user is created.
+2. Create Wallet -> wallet + initial top-up are stored in Supabase.
+3. A second device enters the invite code -> pending join request is created.
+4. Owner opens the wallet/member area -> approves or rejects the request.
+5. After approval, the second user can access the same wallet and transactions.
+
+The Supabase session is persisted by `supabase-js`. Anonymous users still lose access if they explicitly sign out or erase browser/app storage; account linking/login will be added later.
