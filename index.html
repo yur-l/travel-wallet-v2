@@ -120,7 +120,7 @@
 <div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span data-i18n="createWallet">Create Wallet</span></div></div>
 <div class="content">
 <div class="label" data-i18n="walletName">Wallet Name</div>
-<input class="input" id="walletName" placeholder="e.g. Taiwan Trip"/>
+<input class="input" id="walletName" autocomplete="off"/>
 <div class="grid2">
 <div>
 <div class="label" data-i18n="yourCurrency">Your Currency</div>
@@ -204,7 +204,7 @@
 
 <div class="topbar">
 <div class="backtitle"><button class="iconbtn" onclick="go('wallets')">‹</button><span id="walletTitle">Taiwan Trip</span></div>
-<button class="wallet-menu" onclick="openEditWallet()">⋯</button>
+<button class="wallet-menu" id="walletEditBtn" onclick="openEditWallet()">⋯</button>
 </div>
 <div class="content">
 <div class="share-status private" id="shareStatus" onclick="handleShareStatusClick()"></div>
@@ -238,7 +238,7 @@
 <div class="record-title"><h3>🗂 <span data-i18n="latestRecords">Latest Records</span></h3><button class="iconbtn wallet-theme-btn" data-i18n="viewAll" onclick="go('history')" style="font-size:12px;padding:7px 11px;border-radius:10px">View all</button></div>
 <div id="latestRecords"></div>
 </div>
-<button class="invite-card" onclick="copyWalletInvite()">
+<button class="invite-card" id="walletInviteCard" onclick="copyWalletInvite()">
 <div>
 <div data-i18n="inviteCode" style="font-weight:900">Invite Code</div>
 <div class="muted" data-i18n="tapToCopy">Tap to copy and share with your travel buddies.</div>

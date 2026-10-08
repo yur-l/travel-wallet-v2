@@ -17,13 +17,49 @@ const currencies = [
   {code:'PHP',flag:'🇵🇭',name:'Philippine Peso',dec:2}
 ];
 
-const wallets = {};
+const STORAGE_KEY='travelWallet.formal.v3';
+let appState={version:3,user:null,wallets:{}};
+let wallets=appState.wallets;
 let currentWalletKey=null;
+
+function makeId(prefix='id'){
+  if(window.crypto?.randomUUID) return `${prefix}_${crypto.randomUUID()}`;
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+}
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const saved=JSON.parse(raw);
+    if(!saved || typeof saved!=='object') return;
+    appState={version:3,user:saved.user||null,wallets:saved.wallets||{}};
+    wallets=appState.wallets;
+  }catch(e){
+    console.warn('Could not load saved Travel Wallet data',e);
+  }
+}
+
+function saveState(){
+  appState.wallets=wallets;
+  try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(appState)); }
+  catch(e){ console.warn('Could not save Travel Wallet data',e); }
+}
+
+function currentUser(){ return appState.user; }
+function isOwner(w){ return !!(w && currentUser() && w.ownerId===currentUser().id); }
+function isMember(w){
+  if(!w || !currentUser()) return false;
+  return (w.members||[]).some(m=>(typeof m==='string'?m:m.id)===currentUser().id || (typeof m==='string' && m===currentUser().name));
+}
+function canAccessWallet(w){ return isOwner(w) || isMember(w); }
+function accessibleWalletEntries(){ return Object.entries(wallets).filter(([_,w])=>canAccessWallet(w)); }
+
 
 let showAllWallets=false;
 
 function walletEntries(){
-  return Object.entries(wallets);
+  return accessibleWalletEntries();
 }
 
 function renderWalletList(){
@@ -42,15 +78,15 @@ function renderWalletList(){
   list.innerHTML=visible.map(([key,w])=>{
     const homePerForeign=w.foreignTotal ? w.homeSpent/w.foreignTotal : 0;
     const homeValue=w.remaining*homePerForeign;
-    const members=w.members||[userName];
+    const members=w.members||[];
     const sharedMeta=members.length>1 ? `<span>•</span><span>${members.length} ${i18n[currentLang].membersLower}</span>` : '';
     return `<div class="wallet-card" onclick="loadWallet('${key}')">
-      <button class="wallet-delete" onclick="event.stopPropagation();askDeleteWallet('${key}')">✕</button>
+      ${isOwner(w)?`<button class="wallet-delete" onclick="event.stopPropagation();askDeleteWallet('${key}')">✕</button>`:''}
       <div class="wallet-symbol" style="background:${w.theme||'#0F7775'}">${w.icon||'🧳'}</div>
       <div>
         <div class="wallet-name">${escapeHtml(w.name)}</div>
         ${w.remark ? `<div class="wallet-remark">${escapeHtml(w.remark)}</div>` : ''}
-        <div class="wallet-meta"><span>${w.foreign}</span>${sharedMeta}</div>
+        <div class="wallet-meta"><span>${w.foreign}</span><span>•</span><span>${isOwner(w)?(currentLang==='CN'?'我的钱包':'Owned'):(currentLang==='CN'?'已加入':'Joined')}</span>${sharedMeta}</div>
         <div class="money">${fmt(w.foreign,w.remaining)}</div>
         <div class="muted">≈ ${w.home} ${fmt(w.home,homeValue)}</div>
       </div>
@@ -160,8 +196,14 @@ function go(id){
 
 function startApp(){
   const v=document.getElementById('nameInput').value.trim();
-  if(!v){toast('Enter your name');return;}
+  if(!v){toast(currentLang==='CN'?'请输入名字':'Enter your name');return;}
+  if(!appState.user){
+    appState.user={id:makeId('user'),name:v,guest:true};
+  }else{
+    appState.user.name=v;
+  }
   userName=v;
+  saveState();
   document.getElementById('profileName').textContent=userName;
   go('wallets');
 }
@@ -189,6 +231,7 @@ let selectedEditIcon='🧋';
 
 function openEditWallet(){
   const w=wallets[currentWalletKey]; if(!w) return;
+  if(!isOwner(w)){toast(currentLang==='CN'?'只有创建者可以编辑钱包':'Only the owner can edit this wallet');return;}
   document.getElementById('editWalletName').value=w.name||'';
   document.getElementById('editWalletRemark').value=w.remark||'';
   selectedEditTheme=w.theme||'#7C5CFC';
@@ -214,6 +257,7 @@ function saveWalletDetails(){
   w.remark=document.getElementById('editWalletRemark').value.trim();
   w.theme=selectedEditTheme;
   w.icon=selectedEditIcon;
+  saveState();
   renderWallet(); renderWalletList(); go('wallet');
   toast(currentLang==='CN'?'钱包已更新':'Wallet updated');
 }
@@ -247,23 +291,32 @@ function updateCreateRate(){
 }
 
 function createWallet(){
-  const name=document.getElementById('walletName').value.trim()||'New Wallet';
+  const name=document.getElementById('walletName').value.trim();
+  if(!name){toast(currentLang==='CN'?'请输入钱包名称':'Enter a wallet name');return;}
   const home=document.getElementById('homeCurrency').value;
   const foreign=document.getElementById('travelCurrency').value;
   const homeAmt=parseFloat(document.getElementById('homeAmount').value)||0;
   const foreignAmt=parseFloat(document.getElementById('foreignAmount').value)||0;
-  if(!homeAmt || !foreignAmt){toast('Enter both currency amounts'); return;}
+  if(!homeAmt || !foreignAmt){toast(currentLang==='CN'?'请输入两个金额':'Enter both currency amounts'); return;}
   const remark=(document.getElementById('walletRemark')?.value||'').trim();
-  const walletKey='wallet_'+Date.now();
-  wallets[walletKey]={name,home,foreign,homeSpent:homeAmt,foreignTotal:foreignAmt,remaining:foreignAmt,theme:selectedCreateTheme,icon:selectedCreateIcon,remark,inviteCode:generateInviteCode(),members:[userName],joinRequests:[],records:[{type:'topup',note:'Initial Balance',foreign:foreignAmt,my:homeAmt,name:userName,date:'5 Oct 2026',time:'Now',initial:true}]};
+  const walletKey=makeId('wallet');
+  const me=currentUser();
+  wallets[walletKey]={
+    id:walletKey,name,home,foreign,homeSpent:homeAmt,foreignTotal:foreignAmt,remaining:foreignAmt,
+    theme:selectedCreateTheme,icon:selectedCreateIcon,remark,inviteCode:generateInviteCode(),
+    ownerId:me.id,ownerName:me.name,
+    members:[{id:me.id,name:me.name,role:'owner'}],joinRequests:[],
+    records:[{type:'topup',note:'Initial Balance',foreign:foreignAmt,my:homeAmt,name:userName,userId:me.id,date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),time:'Now',initial:true}]
+  };
   currentWalletKey=walletKey;
+  saveState();
   renderWalletList();
   document.getElementById('inviteCode').textContent=wallets[walletKey].inviteCode;
   renderWallet();
   go('created');
 }
 
-function loadWallet(key){currentWalletKey=key;renderWallet();go('wallet')}
+function loadWallet(key){const w=wallets[key];if(!canAccessWallet(w)) return;currentWalletKey=key;renderWallet();go('wallet')}
 
 function renderWallet(){
   const w=wallets[currentWalletKey];
@@ -273,6 +326,8 @@ function renderWallet(){
   const balanceCard=document.getElementById('walletBalanceCard');
   if(balanceCard) balanceCard.style.background=`linear-gradient(135deg, ${w.theme||'#0F7775'}, ${shadeColor(w.theme||'#0F7775',-22)})`;
   document.getElementById('walletTitle').textContent=w.name;
+  const editBtn=document.getElementById('walletEditBtn'); if(editBtn) editBtn.style.display=isOwner(w)?'grid':'none';
+  const inviteCard=document.getElementById('walletInviteCard'); if(inviteCard) inviteCard.style.display=isOwner(w)?'flex':'none';
   const inviteEl=document.getElementById('walletInviteCode'); if(inviteEl) inviteEl.textContent=w.inviteCode||'';
   document.getElementById('walletFlag').textContent=fc.flag;
   document.getElementById('travelCode').textContent=w.foreign;
@@ -322,9 +377,10 @@ function saveExpense(){
   if(!amount){toast('Enter an amount');return}
   const my=amount*(w.homeSpent/w.foreignTotal);
   w.remaining=w.remaining-amount;
-  w.records.unshift({type:'expense',note,foreign:amount,my,name:userName,date:'5 Oct 2026',time:'Now'});
+  w.records.unshift({type:'expense',note,foreign:amount,my,name:userName,userId:currentUser()?.id,date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),time:'Now'});
   document.getElementById('expenseAmount').value='';
   document.getElementById('expenseNote').value='';
+  saveState();
   renderWallet();
   toast('Expense added');
 }
@@ -419,15 +475,25 @@ function renderRecords(){
 
 function joinWallet(){
   const code=document.getElementById('joinCode').value.trim().toUpperCase();
+  if(!code){toast(currentLang==='CN'?'请输入邀请码':'Enter an invite code');return;}
   const match=Object.entries(wallets).find(([_,w])=>(w.inviteCode||'').toUpperCase()===code);
-  if(!match){ toast(currentLang==='CN'?'无效代码':'Invalid Code'); return; }
+  if(!match){
+    toast(currentLang==='CN'?'找不到这个钱包；跨手机加入将在连接共享数据库后启用':'Wallet not found on this device. Cross-device joining will work after the shared database is connected.');
+    return;
+  }
   const [key,target]=match;
+  const me=currentUser();
+  if(target.ownerId===me.id || (target.members||[]).some(m=>(typeof m==='string'?m:m.id)===me.id)){
+    toast(currentLang==='CN'?'你已经在这个钱包里':'You already have access to this wallet');
+    return;
+  }
   target.joinRequests=target.joinRequests||[];
-  if(!target.joinRequests.includes(userName) && !(target.members||[]).includes(userName)) target.joinRequests.push(userName);
-  currentWalletKey=key;
-  renderWallet(); renderWalletList();
-  toast(currentLang==='CN'?'已发送加入申请':'Join request sent');
-  setTimeout(()=>go('wallet'),400);
+  if(!target.joinRequests.some(r=>(typeof r==='string'?r:r.id)===me.id)){
+    target.joinRequests.push({id:me.id,name:me.name});
+    saveState();
+  }
+  toast(currentLang==='CN'?'加入申请已发送，等待钱包创建者批准':'Join request sent. Waiting for owner approval.');
+  go('wallets');
 }
 
 async function copyCode(){
@@ -483,9 +549,9 @@ function setLang(lang){
 function renderShareStatus(){
   const w=wallets[currentWalletKey], el=document.getElementById('shareStatus');
   if(!w || !el) return;
-  const members=w.members||[userName], requests=w.joinRequests||[];
+  const members=w.members||[], requests=w.joinRequests||[];
   el.className='share-status';
-  if(requests.length){
+  if(isOwner(w) && requests.length){
     el.classList.add('request');
     el.innerHTML=`<span>⚠ ${requests.length} ${currentLang==='CN'?'个加入申请':(requests.length===1?'request to join':'requests to join')}</span><span>›</span>`;
   } else if(members.length<=1){
@@ -498,41 +564,44 @@ function renderShareStatus(){
 }
 function handleShareStatusClick(){
   const w=wallets[currentWalletKey]; if(!w) return;
-  if((w.members||[]).length<=1 && (w.joinRequests||[]).length===0) return;
+  if((w.members||[]).length<=1 && (!isOwner(w) || (w.joinRequests||[]).length===0)) return;
   showMembers();
 }
 function renderMembers(){
   const w=wallets[currentWalletKey], list=document.getElementById('memberList'), requestArea=document.getElementById('joinRequestArea');
   if(!w || !list || !requestArea) return;
-  const members=w.members||[userName];
-  list.innerHTML=members.map((name,index)=>`<div class="member-row">
+  const members=w.members||[];
+  list.innerHTML=members.map((member,index)=>{ const name=typeof member==='string'?member:member.name; const owner=(typeof member==='object'&&member.role==='owner') || member.id===w.ownerId || index===0; return `<div class="member-row">
     <div class="member-avatar ${index===0?'m1':index===1?'m2':'m3'}">${(name||'?').charAt(0).toUpperCase()}</div>
-    <div class="member-info"><div class="member-name">${escapeHtml(name)}</div><div class="member-role">${index===0?i18n[currentLang].owner:i18n[currentLang].member}</div></div>
-    ${index===0?'':`<button class="member-remove" onclick="removeMember(${index})">✕</button>`}
-  </div>`).join('');
+    <div class="member-info"><div class="member-name">${escapeHtml(name)}</div><div class="member-role">${owner?i18n[currentLang].owner:i18n[currentLang].member}</div></div>
+    ${owner || !isOwner(w)?'':`<button class="member-remove" onclick="removeMember(${index})">✕</button>`}
+  </div>`; }).join('');
   const requests=w.joinRequests||[];
-  requestArea.innerHTML=requests.map((name,index)=>`<div class="request-card">
+  requestArea.innerHTML=isOwner(w)?requests.map((request,index)=>{ const name=typeof request==='string'?request:request.name; return `<div class="request-card">
     <div style="font-weight:900">${escapeHtml(name)}</div>
     <div class="muted" style="margin-top:3px">${currentLang==='CN'?'请求加入这个钱包':'Wants to join this wallet'}</div>
     <div class="request-actions">
       <button class="approve-btn" onclick="approveJoinRequest(${index})">${i18n[currentLang].approve}</button>
       <button class="reject-btn" onclick="rejectJoinRequest(${index})">${i18n[currentLang].reject}</button>
     </div>
-  </div>`).join('');
+  </div>`; }).join(''):'';
 }
 function approveJoinRequest(index){
-  const w=wallets[currentWalletKey]; if(!w) return;
-  const name=(w.joinRequests||[])[index]; if(!name) return;
-  w.members=w.members||[userName]; w.members.push(name); w.joinRequests.splice(index,1);
-  renderMembers(); renderShareStatus(); renderWalletList();
+  const w=wallets[currentWalletKey]; if(!w || !isOwner(w)) return;
+  const request=(w.joinRequests||[])[index]; if(!request) return;
+  const member=typeof request==='string'?{id:makeId('legacy'),name:request,role:'member'}:{id:request.id,name:request.name,role:'member'};
+  w.members=w.members||[];
+  if(!w.members.some(m=>(typeof m==='string'?m:m.id)===member.id)) w.members.push(member);
+  w.joinRequests.splice(index,1);
+  saveState(); renderMembers(); renderShareStatus(); renderWalletList();
 }
 function rejectJoinRequest(index){
-  const w=wallets[currentWalletKey]; if(!w) return;
-  w.joinRequests.splice(index,1); renderMembers(); renderShareStatus(); renderWalletList();
+  const w=wallets[currentWalletKey]; if(!w || !isOwner(w)) return;
+  w.joinRequests.splice(index,1); saveState(); renderMembers(); renderShareStatus(); renderWalletList();
 }
 function removeMember(index){
-  const w=wallets[currentWalletKey]; if(!w || index===0) return;
-  w.members.splice(index,1); renderMembers(); renderShareStatus(); renderWalletList();
+  const w=wallets[currentWalletKey]; if(!w || !isOwner(w) || index===0) return;
+  w.members.splice(index,1); saveState(); renderMembers(); renderShareStatus(); renderWalletList();
 }
 
 function showMembers(){
@@ -542,6 +611,7 @@ function showMembers(){
 
 async function copyWalletInvite(){
   const w=wallets[currentWalletKey];
+  if(!isOwner(w)) return;
   const code=w?.inviteCode||'';
   try{ await navigator.clipboard.writeText(code); toast(currentLang==='CN'?'邀请码已复制':'Invite code copied'); }
   catch{ toast(code); }
@@ -549,8 +619,9 @@ async function copyWalletInvite(){
 
 let pendingDeleteWalletKey=null;
 function askDeleteWallet(key){
-  pendingDeleteWalletKey=key;
   const w=wallets[key];
+  if(!isOwner(w)){toast(currentLang==='CN'?'只有创建者可以删除钱包':'Only the owner can delete this wallet');return;}
+  pendingDeleteWalletKey=key;
   document.getElementById('confirmTitle').textContent=i18n[currentLang].deleteWalletQ;
   document.getElementById('confirmMessage').textContent=currentLang==='CN'
     ? `确定要删除 ${w?.name||''} 吗？${i18n[currentLang].cannotUndo}`
@@ -563,6 +634,7 @@ function askDeleteWallet(key){
 function confirmDeleteWallet(){
   if(!pendingDeleteWalletKey) return;
   delete wallets[pendingDeleteWalletKey];
+  saveState();
   renderWalletList();
   document.getElementById('confirmModal').classList.remove('show');
   pendingDeleteWalletKey=null;
@@ -633,6 +705,7 @@ function saveEdit(){
   }
 
   closeEdit();
+  saveState();
   renderWallet();
   renderRecords();
   toast(i18n[currentLang].recordUpdated);
@@ -670,6 +743,7 @@ function confirmDeleteRecord(){
     w.remaining-=r.foreign;
   }
   w.records.splice(pendingDeleteIndex,1);
+  saveState();
   closeConfirm();
   renderWallet();
   renderRecords();
@@ -681,6 +755,12 @@ function changeName(){
   const name=input.value.trim();
   if(!name){toast(currentLang==='CN'?'请输入名字':'Enter a name');return}
   userName=name;
+  if(appState.user) appState.user.name=name;
+  Object.values(wallets).forEach(w=>{
+    (w.members||[]).forEach(m=>{ if(typeof m==='object' && m.id===appState.user?.id) m.name=name; });
+    if(w.ownerId===appState.user?.id) w.ownerName=name;
+  });
+  saveState();
   document.getElementById('profileName').textContent=userName;
   toast(currentLang==='CN'?'名字已更新':'Name updated');
 }
@@ -701,7 +781,8 @@ function confirmTopUp(){
   w.homeSpent+=home;
   w.foreignTotal+=foreign;
   w.remaining+=foreign;
-  w.records.unshift({type:'topup',note:'Top Up',foreign,my:home,name:userName,date:'5 Oct 2026',time:'Now'});
+  w.records.unshift({type:'topup',note:'Top Up',foreign,my:home,name:userName,userId:currentUser()?.id,date:new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),time:'Now'});
+  saveState();
   renderWallet();
   go('wallet');
   toast(currentLang==='CN'?'充值已加入':'Top up added');
@@ -712,6 +793,8 @@ function toast(msg){
 }
 function escapeHtml(str){return String(str).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 
+loadState();
+userName=appState.user?.name||'';
 populateCurrencies();
 document.getElementById('topUpHome').addEventListener('input', updateTopUpPreview);
 document.getElementById('topUpForeign').addEventListener('input', updateTopUpPreview);
@@ -726,11 +809,16 @@ function updateTopUpPreview(){
   }else el.textContent='';
 }
 document.getElementById('settingsNameInput').value=userName||'';
+if(appState.user){
+  document.getElementById('profileName').textContent=userName;
+  go('wallets');
+}
 renderWalletList();
 
 
 Object.assign(window, {
   walletEntries,
+  saveState,
   renderWalletList,
   toggleShowAllWallets,
   selectCreateTheme,
