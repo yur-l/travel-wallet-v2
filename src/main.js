@@ -173,41 +173,103 @@ function finishBoot(target='onboarding'){
   go(target);
 }
 
-async function initSession(){
-  let target='onboarding';
-  try{
-    const {data:{session},error:sessionError}=await supabase.auth.getSession();
-    if(sessionError) throw sessionError;
+function resetBootState(){
+  const boot=document.getElementById('appBoot');
+  const spinner=document.getElementById('appBootSpinner');
+  const errorBox=document.getElementById('appBootError');
+  if(boot) boot.classList.remove('hidden');
+  if(spinner) spinner.hidden=false;
+  if(errorBox) errorBox.hidden=true;
+}
 
+function showBootError(message){
+  const spinner=document.getElementById('appBootSpinner');
+  const errorBox=document.getElementById('appBootError');
+  const errorText=document.getElementById('appBootErrorText');
+  if(spinner) spinner.hidden=true;
+  if(errorText) errorText.textContent=message;
+  if(errorBox) errorBox.hidden=false;
+}
+
+async function getRestoredSession(){
+  const {data:{session},error}=await supabase.auth.getSession();
+  if(error) throw error;
+  if(!session) return null;
+
+  const expiresAt=session.expires_at ? session.expires_at*1000 : 0;
+  if(expiresAt && expiresAt <= Date.now()+60000){
+    const {data,error:refreshError}=await supabase.auth.refreshSession();
+    if(refreshError) throw refreshError;
+    return data.session||session;
+  }
+  return session;
+}
+
+async function fetchProfileName(session){
+  const readProfile=()=>supabase
+    .from('profiles')
+    .select('display_name')
+    .eq('id',session.user.id)
+    .maybeSingle();
+
+  let result=await readProfile();
+  if(!result.error) return result.data?.display_name||session.user.user_metadata?.display_name||'';
+
+  // A stale/expired access token can make the first database request fail after
+  // the app has been in the background for a long time. Refresh once and retry.
+  const {data:refreshed,error:refreshError}=await supabase.auth.refreshSession();
+  if(refreshError) throw result.error;
+  if(refreshed?.session) session=refreshed.session;
+
+  result=await readProfile();
+  if(result.error) throw result.error;
+  return result.data?.display_name||session.user.user_metadata?.display_name||'';
+}
+
+async function initSession(){
+  resetBootState();
+  try{
+    const session=await getRestoredSession();
+
+    // Only a genuine lack of a stored Supabase session should send the user
+    // back to onboarding. Network/profile errors must never masquerade as logout.
     if(!session?.user){
+      appState.user=null;
+      userName='';
       renderWalletList();
+      finishBoot('onboarding');
       return;
     }
 
-    const {data:profile,error}=await supabase
-      .from('profiles')
-      .select('display_name')
-      .eq('id',session.user.id)
-      .maybeSingle();
-    if(error) throw error;
+    const fallbackName=session.user.user_metadata?.display_name||'';
+    appState.user={id:session.user.id,name:fallbackName,guest:session.user.is_anonymous!==false};
+    userName=fallbackName;
 
-    const name=profile?.display_name||session.user.user_metadata?.display_name||'';
+    const name=await fetchProfileName(session);
     appState.user={id:session.user.id,name,guest:session.user.is_anonymous!==false};
     userName=name;
     document.getElementById('profileName').textContent=userName||'Guest';
     document.getElementById('settingsNameInput').value=userName||'';
 
-    if(name){
-      target='wallets';
-      await loadRemoteData({silent:true});
-      await startRealtime();
+    if(!name){
+      finishBoot('onboarding');
+      return;
     }
+
+    finishBoot('wallets');
+    await loadRemoteData({silent:true});
+    await startRealtime();
   }catch(error){
-    console.error('Session init failed',error);
-    target='onboarding';
-  }finally{
-    finishBoot(target);
+    console.error('Session restore failed',error);
+    const message=currentLang==='CN'
+      ? '暂时无法恢复你的使用状态。请检查网络后重试。'
+      : 'Could not restore your session. Check your connection and try again.';
+    showBootError(message);
   }
+}
+
+async function retrySessionInit(){
+  await initSession();
 }
 
 
@@ -1041,5 +1103,6 @@ Object.assign(window, {
   confirmTopUp,
   toast,
   escapeHtml,
-  updateTopUpPreview
+  updateTopUpPreview,
+  retrySessionInit
 });

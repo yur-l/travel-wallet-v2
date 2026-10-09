@@ -13,7 +13,11 @@
 <div class="app-boot" id="appBoot" aria-label="Loading Travel Wallet">
   <div class="app-boot-mark">✈️</div>
   <div class="app-boot-name">Travel Wallet</div>
-  <div class="app-boot-spinner" aria-hidden="true"></div>
+  <div class="app-boot-spinner" id="appBootSpinner" aria-hidden="true"></div>
+  <div class="app-boot-error" id="appBootError" hidden>
+    <div id="appBootErrorText">Could not restore your session.</div>
+    <button class="app-boot-retry" onclick="retrySessionInit()">Retry</button>
+  </div>
 </div>
 <section class="onboarding-screen screen" id="onboarding">
 <div class="hero hero-illustrated">

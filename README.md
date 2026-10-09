@@ -48,3 +48,9 @@ The canonical fresh-project schema lives at `supabase/schema.sql`. It includes t
 For the existing live Supabase project, run `supabase/realtime.sql` once in Supabase SQL Editor, then deploy this frontend build.
 
 Realtime now listens for changes to wallets, members, join requests, transactions, and profiles. The app debounces bursts of events into a single remote refresh and also refreshes when the tab/app regains focus as a fallback.
+
+## V7 session recovery fix
+- Existing Supabase sessions are restored before showing onboarding.
+- Expiring sessions are refreshed once before profile loading.
+- Profile/network failures no longer send an existing guest back to the name screen.
+- A retry state is shown instead when session restoration temporarily fails.
