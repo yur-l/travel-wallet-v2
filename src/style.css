@@ -445,3 +445,31 @@ body.dark .sheet-grabber{background:#3c4d56}
   .card-map{left:6px}
   .card-luggage{right:4px}
 }
+
+
+/* App bootstrap: prevents onboarding flash while Supabase restores the session */
+.app-boot{
+  min-height:100dvh;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  background:var(--bg);
+  color:var(--text);
+  position:relative;
+  z-index:100;
+}
+.app-boot.hidden{display:none}
+.app-boot-mark{font-size:32px;line-height:1}
+.app-boot-name{font-size:17px;font-weight:900;letter-spacing:-.2px}
+.app-boot-spinner{
+  width:22px;height:22px;margin-top:7px;border-radius:50%;
+  border:2px solid var(--line);border-top-color:var(--teal);
+  animation:appBootSpin .75s linear infinite;
+}
+@keyframes appBootSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){
+  .app-boot-spinner{animation:none;border-top-color:var(--line)}
+}

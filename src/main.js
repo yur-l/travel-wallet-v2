@@ -167,25 +167,46 @@ async function loadRemoteData({silent=false}={}){
   }
 }
 
+function finishBoot(target='onboarding'){
+  const boot=document.getElementById('appBoot');
+  if(boot) boot.classList.add('hidden');
+  go(target);
+}
+
 async function initSession(){
+  let target='onboarding';
   try{
-    const {data:{session}}=await supabase.auth.getSession();
+    const {data:{session},error:sessionError}=await supabase.auth.getSession();
+    if(sessionError) throw sessionError;
+
     if(!session?.user){
       renderWalletList();
       return;
     }
-    const {data:profile,error}=await supabase.from('profiles').select('display_name').eq('id',session.user.id).maybeSingle();
+
+    const {data:profile,error}=await supabase
+      .from('profiles')
+      .select('display_name')
+      .eq('id',session.user.id)
+      .maybeSingle();
     if(error) throw error;
+
     const name=profile?.display_name||session.user.user_metadata?.display_name||'';
     appState.user={id:session.user.id,name,guest:session.user.is_anonymous!==false};
     userName=name;
     document.getElementById('profileName').textContent=userName||'Guest';
     document.getElementById('settingsNameInput').value=userName||'';
-    if(name) go('wallets');
-    await loadRemoteData({silent:true});
-    await startRealtime();
+
+    if(name){
+      target='wallets';
+      await loadRemoteData({silent:true});
+      await startRealtime();
+    }
   }catch(error){
     console.error('Session init failed',error);
+    target='onboarding';
+  }finally{
+    finishBoot(target);
   }
 }
 
