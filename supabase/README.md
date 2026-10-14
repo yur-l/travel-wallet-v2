@@ -1,17 +1,7 @@
-# Supabase setup
+# Supabase files
 
-## Existing Travel Wallet project
+- `v8-migration.sql` — run once on the current live project before deploying V8.
+- `schema.sql` — consolidated fresh-project setup. Do not run this full file on the existing live project.
+- `realtime.sql` — original Realtime publication helper; already applied in the current project.
 
-Your core schema is already installed and tested. To turn on live syncing, run only:
-
-`realtime.sql`
-
-in Supabase **SQL Editor → New query**.
-
-This adds the five Travel Wallet tables to the `supabase_realtime` publication. It does not delete wallet data.
-
-## Fresh Supabase project
-
-For a brand-new project, run `schema.sql`. It contains the current canonical schema, RLS fixes, join-wallet RPC fixes, and realtime publication setup.
-
-Do not rerun the entire `schema.sql` on the current production project unless you are intentionally rebuilding it.
+V8 changes database permissions so active wallet members can manage shared-wallet content while wallet deletion/restoration remains owner-only.

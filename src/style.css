@@ -477,3 +477,29 @@ body.dark .sheet-grabber{background:#3c4d56}
 .app-boot-error{max-width:280px;text-align:center;color:var(--sub);font-size:13px;line-height:1.5;margin-top:4px}
 .app-boot-error[hidden]{display:none}
 .app-boot-retry{margin-top:12px;border:0;border-radius:13px;background:var(--teal);color:#fff;padding:10px 18px;font-weight:900}
+
+/* V8: categories, filters, join requests, recently deleted */
+.category-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.category-choice{height:42px;border:1.5px solid var(--line);border-radius:13px;background:var(--card);color:var(--text);font-weight:850;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 8px}
+.category-choice.active{border-color:currentColor;box-shadow:0 0 0 2px rgba(15,119,117,.08)}
+.category-choice.food{color:#b16f22;background:rgba(213,155,53,.08)}
+.category-choice.transport{color:#2f6b9a;background:rgba(47,107,154,.08)}
+.category-choice.shopping{color:#b64065;background:rgba(209,77,114,.08)}
+.tx-category{width:40px;height:40px;border:0;border-radius:50%;display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.tx-category.food{background:rgba(213,155,53,.15)}
+.tx-category.transport{background:rgba(47,107,154,.14)}
+.tx-category.shopping{background:rgba(209,77,114,.14)}
+.tx-category.untagged{background:rgba(111,125,136,.12)}
+.tx-category.topup-static{background:rgba(25,163,109,.12);color:var(--green);font-weight:950}
+.clear-filter{border:0;background:transparent;color:var(--danger);font-size:12px;font-weight:900;padding:7px 0}
+.record-title-actions{display:flex;align-items:center;gap:10px}
+.history-filter-row{min-height:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:-8px;margin-bottom:8px}
+.request-badge{display:inline-flex;align-items:center;background:var(--green);color:#fff;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;line-height:1.25}
+.wallet-card-deleted{filter:grayscale(1);opacity:.78;background:#eceeed;box-shadow:none;border-color:#d9dddc;cursor:default}
+.wallet-card-deleted .deleted-symbol{background:#9aa3a7}
+.wallet-card-deleted .money{display:none}
+.deleted-countdown{margin-top:7px;color:#69747a;font-size:12px;font-weight:850}
+.restore-wallet-btn{margin-top:8px;border:1px solid #8f999e;background:transparent;color:#4d5a60;border-radius:10px;padding:6px 12px;font-size:12px;font-weight:900}
+.share-status.request{background:var(--green);color:#fff;border-color:var(--green)}
+body.dark .wallet-card-deleted{background:#263039;border-color:#36434b;opacity:.7}
+body.dark .category-choice{border-color:var(--line)}

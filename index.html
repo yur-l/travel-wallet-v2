@@ -241,10 +241,17 @@
 <div class="tiny" id="expenseMyrPreview" style="margin-top:6px;color:var(--green);font-weight:800"></div>
 <div class="label" data-i18n="note">Note</div>
 <input class="input" id="expenseNote" placeholder=""/>
+<div class="label" data-i18n="category">Category</div>
+<div class="category-picker" id="expenseCategoryPicker">
+<button class="category-choice food" data-category="food" onclick="selectExpenseCategory('food')"><span>🍴</span><span data-i18n="food">Food</span></button>
+<button class="category-choice transport" data-category="transport" onclick="selectExpenseCategory('transport')"><span>🚗</span><span data-i18n="transport">Transport</span></button>
+<button class="category-choice shopping" data-category="shopping" onclick="selectExpenseCategory('shopping')"><span>🛍️</span><span data-i18n="shopping">Shopping</span></button>
+</div>
+<div class="tiny" data-i18n="categoryOptional" style="margin-top:7px">Optional · no category by default</div>
 <button class="btn primary wallet-theme-btn" onclick="saveExpense()">＋ <span data-i18n="addExpense">Add Expense</span></button>
 </div>
 <div class="record-card">
-<div class="record-title"><h3>🗂 <span data-i18n="latestRecords">Latest Records</span></h3><button class="iconbtn wallet-theme-btn" data-i18n="viewAll" onclick="go('history')" style="font-size:12px;padding:7px 11px;border-radius:10px">View all</button></div>
+<div class="record-title"><h3>🗂 <span data-i18n="latestRecords">Latest Records</span></h3><div class="record-title-actions"><button class="clear-filter" id="latestClearFilter" onclick="clearExpenseFilter()" hidden>Clear filter</button><button class="iconbtn wallet-theme-btn" data-i18n="viewAll" onclick="go('history')" style="font-size:12px;padding:7px 11px;border-radius:10px">View all</button></div></div>
 <div id="latestRecords"></div>
 </div>
 <button class="invite-card" id="walletInviteCard" onclick="copyWalletInvite()">
@@ -264,6 +271,7 @@
 <button class="history-tab active" data-i18n="expenses" id="expenseTab" onclick="setHistoryTab('expenses')">Expenses</button>
 <button class="history-tab" data-i18n="topUps" id="topupTab" onclick="setHistoryTab('topups')">Top Ups</button>
 </div>
+<div class="history-filter-row"><span id="historyFilterLabel" class="muted"></span><button class="clear-filter" id="historyClearFilter" onclick="clearExpenseFilter()" hidden>Clear filter</button></div>
 <div id="historyGroups"></div>
 </div>
 </section>
@@ -344,8 +352,21 @@
 <div class="modal-box">
 <h3 id="editTitle">Edit Record</h3>
 <div class="edit-full" id="editNoteWrap">
-<div class="label">Note</div>
+<div class="label" data-i18n="note">Note</div>
 <input class="input" id="editNote">
+</input></div>
+<div class="edit-full" id="editCategoryWrap">
+<div class="label" data-i18n="category">Category</div>
+<div class="category-picker" id="editCategoryPicker">
+<button class="category-choice food" data-category="food" onclick="selectEditCategory('food')"><span>🍴</span><span data-i18n="food">Food</span></button>
+<button class="category-choice transport" data-category="transport" onclick="selectEditCategory('transport')"><span>🚗</span><span data-i18n="transport">Transport</span></button>
+<button class="category-choice shopping" data-category="shopping" onclick="selectEditCategory('shopping')"><span>🛍️</span><span data-i18n="shopping">Shopping</span></button>
+</div>
+<div class="tiny" data-i18n="categoryOptional" style="margin-top:7px">Optional · no category by default</div>
+</div>
+<div id="editHomeWrap" style="display:none">
+<div class="label" id="editHomeLabel">MYR</div>
+<input class="input" id="editHomeAmount" inputmode="decimal" step="any" type="number">
 </input></div>
 <div>
 <div class="label" id="editForeignLabel">TWD</div>

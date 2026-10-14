@@ -1,56 +1,32 @@
-# Travel Wallet - Supabase Connected
+# Travel Wallet Formal V8
 
-This build uses Supabase for anonymous authentication, wallets, membership, join requests, and transactions.
+V8 builds on V7 session recovery and V5 Realtime.
 
-## Required environment variables
+## Before deploying V8
 
-Create `.env.local` for local development:
+Run this file once in the **existing Supabase project**:
 
-```bash
-VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
-```
+`supabase/v8-migration.sql`
 
-Do not put a Supabase secret/service-role key in this project.
+Then push the V8 project to the Vercel-connected repository.
 
-## Vercel
+## V8 changes
 
-In Vercel -> Project -> Settings -> Environment Variables, add:
+- Wallet name field stays blank when creating a wallet.
+- Join-request count is highlighted on the wallet card.
+- All active wallet members can see/copy the invite code.
+- All active wallet members can approve/reject join requests, edit wallet details, edit/delete transactions, and remove non-owner members.
+- Only the wallet owner can delete/restore the wallet.
+- Wallet deletion is now a 14-day soft delete with a grey card, countdown, and Restore button.
+- Expired soft-deleted wallets are purged by `purge_expired_wallets()` when the app next starts a session.
+- Create Wallet form resets after a successful creation.
+- Top-up records can be edited in both currencies.
+- Expense categories: Food / Transport / Shopping / no category (default notebook icon).
+- Expense category can also be edited later.
+- Clicking an expense category icon filters expenses; Clear filter appears in red.
+- Latest Records shows the latest 3 transactions across dates instead of only the newest day.
+- Added Chinese translations for Initial Balance, Top Up, empty expense states, edit Note, and language-aware dates.
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`
+## Important
 
-Add them for Production, Preview, and Development, then redeploy.
-
-## Run locally
-
-```bash
-npm install
-npm run dev
-```
-
-## Current shared-wallet flow
-
-1. First launch -> user enters a display name -> Supabase anonymous user is created.
-2. Create Wallet -> wallet + initial top-up are stored in Supabase.
-3. A second device enters the invite code -> pending join request is created.
-4. Owner opens the wallet/member area -> approves or rejects the request.
-5. After approval, the second user can access the same wallet and transactions.
-
-The Supabase session is persisted by `supabase-js`. Anonymous users still lose access if they explicitly sign out or erase browser/app storage; account linking/login will be added later.
-
-## Supabase database schema
-
-The canonical fresh-project schema lives at `supabase/schema.sql`. It includes the RLS and join-request fixes verified during cross-device testing. Do not rerun the full schema on the existing live database.
-
-## Realtime
-
-For the existing live Supabase project, run `supabase/realtime.sql` once in Supabase SQL Editor, then deploy this frontend build.
-
-Realtime now listens for changes to wallets, members, join requests, transactions, and profiles. The app debounces bursts of events into a single remote refresh and also refreshes when the tab/app regains focus as a fallback.
-
-## V7 session recovery fix
-- Existing Supabase sessions are restored before showing onboarding.
-- Expiring sessions are refreshed once before profile loading.
-- Profile/network failures no longer send an existing guest back to the name screen.
-- A retry state is shown instead when session restoration temporarily fails.
+Do not run the full `supabase/schema.sql` on the existing production project. It is for rebuilding a fresh project. Use only `supabase/v8-migration.sql` for the current live database.
