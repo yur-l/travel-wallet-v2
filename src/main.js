@@ -696,8 +696,8 @@ let historyTab='expenses';
 
 function setHistoryTab(tab){
   historyTab=tab;
-  document.getElementById('expenseTab').classList.toggle('active',tab==='expenses');
-  document.getElementById('topupTab').classList.toggle('active',tab==='topups');
+  document.getElementById('expenseTab')?.classList.toggle('active',tab==='expenses');
+  document.getElementById('topupTab')?.classList.toggle('active',tab==='topups');
   renderRecords();
 }
 
@@ -711,11 +711,13 @@ function renderRecords(){
   const clearHistory=document.getElementById('historyClearFilter');
   const historyFilterLabel=document.getElementById('historyFilterLabel');
   const filterSet=expenseFilterCategory!==undefined;
-  const historyFilterActive=filterSet;
+  const historyFilterActive=filterSet && historyTab==='expenses';
   const filterMeta=filterSet?categoryMeta(expenseFilterCategory):null;
+  const historyFilterHint=document.getElementById('historyFilterHint');
   if(clearLatest){clearLatest.hidden=!filterSet;clearLatest.textContent=i18n[currentLang].clearFilter;}
   if(clearHistory){clearHistory.hidden=!historyFilterActive;clearHistory.textContent=i18n[currentLang].clearFilter;}
   if(historyFilterLabel) historyFilterLabel.textContent=historyFilterActive?`${i18n[currentLang].filteredBy}: ${filterMeta.icon} ${filterMeta.label}`:'';
+  if(historyFilterHint) historyFilterHint.hidden=historyTab!=='expenses';
 
   const renderCategoryIcon=(r)=>{
     const meta=categoryMeta(r.category||null);
@@ -772,29 +774,31 @@ function renderRecords(){
 
   if(!historyGroups) return;
 
-  // History shows both expenses and top ups. Category filtering is expense-only by design.
-  const historyRecords=historyFilterActive
-    ? indexed.filter(r=>r.type==='expense' && (r.category||null)===expenseFilterCategory)
-    : indexed;
-  const keys=[...new Set(historyRecords.map(r=>dateKey(r.createdAt)))];
-  historyGroups.innerHTML=historyRecords.length ? keys.map(key=>{
-    const day=historyRecords.filter(r=>dateKey(r.createdAt)===key);
-    const dayExpenses=day.filter(r=>r.type==='expense');
-    const totalForeign=dayExpenses.reduce((sum,r)=>sum+r.foreign,0);
-    const totalHome=dayExpenses.reduce((sum,r)=>sum+r.my,0);
-    const totalBlock=dayExpenses.length ? `<div class="history-total">
-          <span class="tiny">${currentLang==='CN'?'当日总消费':'Daily spending'}</span>
-          <strong>${fmt(w.foreign,totalForeign)} ${w.foreign}</strong>
-          <div class="tiny">≈ ${w.home} ${fmt(w.home,totalHome)}</div>
-        </div>` : '';
-    return `<div style="margin-bottom:22px">
-      <div class="history-day">
-        <div class="history-date">${formatDate(day[0].createdAt)}</div>
-        ${totalBlock}
-      </div>
-      <div class="panel" style="margin-top:0">${day.map(r=>r.type==='topup'?renderTopup(r,r._idx):renderExpense(r,r._idx)).join('')}</div>
-    </div>`;
-  }).join('') : `<div class="muted" style="padding:24px 0;text-align:center">${historyFilterActive?i18n[currentLang].noExpensesYet:i18n[currentLang].noRecordsYet}</div>`;
+  if(historyTab==='expenses'){
+    const expenseRecords=indexed.filter(r=>r.type==='expense' && (!historyFilterActive || (r.category||null)===expenseFilterCategory));
+    const keys=[...new Set(expenseRecords.map(r=>dateKey(r.createdAt)))];
+    historyGroups.innerHTML=expenseRecords.length ? keys.map(key=>{
+      const day=expenseRecords.filter(r=>dateKey(r.createdAt)===key);
+      const totalForeign=day.reduce((sum,r)=>sum+r.foreign,0);
+      const totalHome=day.reduce((sum,r)=>sum+r.my,0);
+      return `<div style="margin-bottom:22px">
+        <div class="history-day">
+          <div class="history-date">${formatDate(day[0].createdAt)}</div>
+          <div class="history-total">
+            <span class="tiny">${currentLang==='CN'?'当日总消费':'Daily spending'}</span>
+            <strong>${fmt(w.foreign,totalForeign)} ${w.foreign}</strong>
+            <div class="tiny">≈ ${w.home} ${fmt(w.home,totalHome)}</div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:0">${day.map(r=>renderExpense(r,r._idx)).join('')}</div>
+      </div>`;
+    }).join('') : `<div class="muted" style="padding:24px 0;text-align:center">${i18n[currentLang].noExpensesYet}</div>`;
+  } else {
+    const topups=indexed.filter(r=>r.type==='topup');
+    historyGroups.innerHTML=topups.length
+      ? `<div class="panel" style="margin-top:0">${topups.map(r=>renderTopup(r,r._idx)).join('')}</div>`
+      : `<div class="muted" style="padding:24px 0;text-align:center">${i18n[currentLang].noTopUpsYet}</div>`;
+  }
 }
 
 async function joinWallet(){
