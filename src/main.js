@@ -772,24 +772,29 @@ function renderRecords(){
 
   if(!historyGroups) return;
 
-  const expenseRecords=indexed.filter(r=>r.type==='expense' && (!historyFilterActive || (r.category||null)===expenseFilterCategory));
-  const keys=[...new Set(expenseRecords.map(r=>dateKey(r.createdAt)))];
-  historyGroups.innerHTML=expenseRecords.length ? keys.map(key=>{
-    const day=expenseRecords.filter(r=>dateKey(r.createdAt)===key);
-    const totalForeign=day.reduce((sum,r)=>sum+r.foreign,0);
-    const totalHome=day.reduce((sum,r)=>sum+r.my,0);
+  // History shows both expenses and top ups. Category filtering is expense-only by design.
+  const historyRecords=historyFilterActive
+    ? indexed.filter(r=>r.type==='expense' && (r.category||null)===expenseFilterCategory)
+    : indexed;
+  const keys=[...new Set(historyRecords.map(r=>dateKey(r.createdAt)))];
+  historyGroups.innerHTML=historyRecords.length ? keys.map(key=>{
+    const day=historyRecords.filter(r=>dateKey(r.createdAt)===key);
+    const dayExpenses=day.filter(r=>r.type==='expense');
+    const totalForeign=dayExpenses.reduce((sum,r)=>sum+r.foreign,0);
+    const totalHome=dayExpenses.reduce((sum,r)=>sum+r.my,0);
+    const totalBlock=dayExpenses.length ? `<div class="history-total">
+          <span class="tiny">${currentLang==='CN'?'当日总消费':'Daily spending'}</span>
+          <strong>${fmt(w.foreign,totalForeign)} ${w.foreign}</strong>
+          <div class="tiny">≈ ${w.home} ${fmt(w.home,totalHome)}</div>
+        </div>` : '';
     return `<div style="margin-bottom:22px">
       <div class="history-day">
         <div class="history-date">${formatDate(day[0].createdAt)}</div>
-        <div class="history-total">
-          <span class="tiny">${currentLang==='CN'?'当日总消费':'Daily total'}</span>
-          <strong>${fmt(w.foreign,totalForeign)} ${w.foreign}</strong>
-          <div class="tiny">≈ ${w.home} ${fmt(w.home,totalHome)}</div>
-        </div>
+        ${totalBlock}
       </div>
-      <div class="panel" style="margin-top:0">${day.map(r=>renderExpense(r,r._idx)).join('')}</div>
+      <div class="panel" style="margin-top:0">${day.map(r=>r.type==='topup'?renderTopup(r,r._idx):renderExpense(r,r._idx)).join('')}</div>
     </div>`;
-  }).join('') : `<div class="muted" style="padding:24px 0;text-align:center">${i18n[currentLang].noExpensesYet}</div>`;
+  }).join('') : `<div class="muted" style="padding:24px 0;text-align:center">${historyFilterActive?i18n[currentLang].noExpensesYet:i18n[currentLang].noRecordsYet}</div>`;
 }
 
 async function joinWallet(){
