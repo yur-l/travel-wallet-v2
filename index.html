@@ -267,10 +267,7 @@
 
 <div class="topbar"><div class="backtitle"><button class="iconbtn" onclick="go('wallet')">‹</button><span data-i18n="expenseRecords">History</span></div></div>
 <div class="content">
-<div class="history-tabs">
-<button class="history-tab active" data-i18n="expenses" id="expenseTab" onclick="setHistoryTab('expenses')">Expenses</button>
-<button class="history-tab" data-i18n="topUps" id="topupTab" onclick="setHistoryTab('topups')">Top Ups</button>
-</div>
+<div class="history-filter-hint muted" data-i18n="filterHint">Tap an icon to filter expenses</div>
 <div class="history-filter-row"><span id="historyFilterLabel" class="muted"></span><button class="clear-filter" id="historyClearFilter" onclick="clearExpenseFilter()" hidden>Clear filter</button></div>
 <div id="historyGroups"></div>
 </div>

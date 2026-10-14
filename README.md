@@ -30,3 +30,11 @@ Then push the V8 project to the Vercel-connected repository.
 ## Important
 
 Do not run the full `supabase/schema.sql` on the existing production project. It is for rebuilding a fresh project. Use only `supabase/v8-migration.sql` for the current live database.
+
+
+## V8.1 UI polish
+- Category buttons use compact 13px labels.
+- Expense Records shows expenses only (Top Ups removed from that screen).
+- Transaction dates use DD-MM-YYYY.
+- Latest Records shows up to 5 records.
+- Expense Records includes a tap-icon-to-filter hint.

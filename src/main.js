@@ -87,8 +87,11 @@ function dateKey(iso){
 }
 function formatDate(iso){
   if(!iso) return '';
-  const locale=currentLang==='CN'?'zh-CN':'en-GB';
-  return new Date(iso).toLocaleDateString(locale,{day:'numeric',month:currentLang==='CN'?'long':'short',year:'numeric'});
+  const d=new Date(iso);
+  const day=String(d.getDate()).padStart(2,'0');
+  const month=String(d.getMonth()+1).padStart(2,'0');
+  const year=d.getFullYear();
+  return `${day}-${month}-${year}`;
 }
 function formatTime(iso){
   if(!iso) return '';
@@ -423,7 +426,7 @@ const i18n={
     cannotUndo:'This action cannot be undone.',recordUpdated:'Record updated',
     walletColor:'Wallet Color',walletIcon:'Wallet Icon',private:'Private',requestToJoin:'request to join',requestsToJoin:'requests to join',approve:'Approve',reject:'Reject',removeMember:'Remove member',remark:'Remark',editWallet:'Edit Wallet',
     loginPrompt:'Already have an account?',continue:'Continue',enterYourName:'Enter your name',heroSubtitle:'Keep track of your travel expenses together, anywhere in the world.',onboardingTitle:"What's your name?",onboardingSubtitle:'This name will be shown when you add expenses or top up.',noWalletsYet:'No wallets yet',createFirstWallet:'Create your first travel wallet to get started.',
-    category:'Category',categoryOptional:'Optional · no category by default',food:'Food',transport:'Transport',shopping:'Shopping',untagged:'Untagged',clearFilter:'Clear filter',filteredBy:'Filtered by',restore:'Restore',dayLeft:'day left',daysLeft:'days left',movedToBin:'Wallet moved to Bin',restored:'Wallet restored',initialBalance:'Initial Balance',expense:'Expense',noExpensesYet:'No expenses yet',noTopUpsYet:'No top ups yet',noRecordsYet:'No records yet'
+    category:'Category',categoryOptional:'Optional · no category by default',food:'Food',transport:'Transport',shopping:'Shopping',untagged:'Untagged',clearFilter:'Clear filter',filteredBy:'Filtered by',restore:'Restore',dayLeft:'day left',daysLeft:'days left',movedToBin:'Wallet moved to Bin',restored:'Wallet restored',initialBalance:'Initial Balance',expense:'Expense',noExpensesYet:'No expenses yet',noTopUpsYet:'No top ups yet',noRecordsYet:'No records yet',filterHint:'Tap an icon to filter expenses'
   },
   CN:{
     settings:'设置',darkMode:'深色模式',darkModeDesc:'切换浅色与深色显示。',
@@ -451,7 +454,7 @@ const i18n={
     cannotUndo:'此操作无法撤销。',recordUpdated:'记录已更新',
     walletColor:'钱包颜色',walletIcon:'钱包图标',private:'私人',requestToJoin:'个加入申请',requestsToJoin:'个加入申请',approve:'批准',reject:'拒绝',removeMember:'移除成员',remark:'备注',editWallet:'编辑钱包',
     loginPrompt:'已有账号？',continue:'继续',enterYourName:'输入你的名字',heroSubtitle:'随时随地与旅伴一起记录旅行开销。',onboardingTitle:'你叫什么名字？',onboardingSubtitle:'这个名字会显示在你添加消费或充值时。',noWalletsYet:'还没有钱包',createFirstWallet:'创建你的第一个旅行钱包，马上开始。',
-    category:'标签',categoryOptional:'可选 · 默认无标签',food:'饮食',transport:'交通',shopping:'购物',untagged:'无标签',clearFilter:'清除筛选',filteredBy:'筛选',restore:'恢复',dayLeft:'天后删除',daysLeft:'天后删除',movedToBin:'钱包已移到回收状态',restored:'钱包已恢复',initialBalance:'初始余额',expense:'消费',noExpensesYet:'暂无消费记录',noTopUpsYet:'暂无充值记录',noRecordsYet:'暂无记录'
+    category:'标签',categoryOptional:'可选 · 默认无标签',food:'饮食',transport:'交通',shopping:'购物',untagged:'无标签',clearFilter:'清除筛选',filteredBy:'筛选',restore:'恢复',dayLeft:'天后删除',daysLeft:'天后删除',movedToBin:'钱包已移到回收状态',restored:'钱包已恢复',initialBalance:'初始余额',expense:'消费',noExpensesYet:'暂无消费记录',noTopUpsYet:'暂无充值记录',noRecordsYet:'暂无记录',filterHint:'点击左侧图标筛选消费'
   }
 };
 
@@ -708,7 +711,7 @@ function renderRecords(){
   const clearHistory=document.getElementById('historyClearFilter');
   const historyFilterLabel=document.getElementById('historyFilterLabel');
   const filterSet=expenseFilterCategory!==undefined;
-  const historyFilterActive=filterSet && historyTab==='expenses';
+  const historyFilterActive=filterSet;
   const filterMeta=filterSet?categoryMeta(expenseFilterCategory):null;
   if(clearLatest){clearLatest.hidden=!filterSet;clearLatest.textContent=i18n[currentLang].clearFilter;}
   if(clearHistory){clearHistory.hidden=!historyFilterActive;clearHistory.textContent=i18n[currentLang].clearFilter;}
@@ -762,38 +765,31 @@ function renderRecords(){
 
   const indexed=w.records.map((r,i)=>({...r,_idx:i}));
   const latestRecords=filterSet
-    ? indexed.filter(r=>r.type==='expense' && (r.category||null)===expenseFilterCategory).slice(0,3)
-    : indexed.slice(0,3);
+    ? indexed.filter(r=>r.type==='expense' && (r.category||null)===expenseFilterCategory).slice(0,5)
+    : indexed.slice(0,5);
   latest.innerHTML=latestRecords.map(r=>r.type==='topup'?renderTopup(r,r._idx):renderExpense(r,r._idx)).join('')
     || `<div class="muted" style="padding:16px 0;text-align:center">${filterSet?i18n[currentLang].noExpensesYet:i18n[currentLang].noRecordsYet}</div>`;
 
   if(!historyGroups) return;
 
-  if(historyTab==='expenses'){
-    const expenseRecords=indexed.filter(r=>r.type==='expense' && (!historyFilterActive || (r.category||null)===expenseFilterCategory));
-    const keys=[...new Set(expenseRecords.map(r=>dateKey(r.createdAt)))];
-    historyGroups.innerHTML=expenseRecords.length ? keys.map(key=>{
-      const day=expenseRecords.filter(r=>dateKey(r.createdAt)===key);
-      const totalForeign=day.reduce((sum,r)=>sum+r.foreign,0);
-      const totalHome=day.reduce((sum,r)=>sum+r.my,0);
-      return `<div style="margin-bottom:22px">
-        <div class="history-day">
-          <div class="history-date">${formatDate(day[0].createdAt)}</div>
-          <div class="history-total">
-            <span class="tiny">${currentLang==='CN'?'当日总消费':'Daily total'}</span>
-            <strong>${fmt(w.foreign,totalForeign)} ${w.foreign}</strong>
-            <div class="tiny">≈ ${w.home} ${fmt(w.home,totalHome)}</div>
-          </div>
+  const expenseRecords=indexed.filter(r=>r.type==='expense' && (!historyFilterActive || (r.category||null)===expenseFilterCategory));
+  const keys=[...new Set(expenseRecords.map(r=>dateKey(r.createdAt)))];
+  historyGroups.innerHTML=expenseRecords.length ? keys.map(key=>{
+    const day=expenseRecords.filter(r=>dateKey(r.createdAt)===key);
+    const totalForeign=day.reduce((sum,r)=>sum+r.foreign,0);
+    const totalHome=day.reduce((sum,r)=>sum+r.my,0);
+    return `<div style="margin-bottom:22px">
+      <div class="history-day">
+        <div class="history-date">${formatDate(day[0].createdAt)}</div>
+        <div class="history-total">
+          <span class="tiny">${currentLang==='CN'?'当日总消费':'Daily total'}</span>
+          <strong>${fmt(w.foreign,totalForeign)} ${w.foreign}</strong>
+          <div class="tiny">≈ ${w.home} ${fmt(w.home,totalHome)}</div>
         </div>
-        <div class="panel" style="margin-top:0">${day.map(r=>renderExpense(r,r._idx)).join('')}</div>
-      </div>`;
-    }).join('') : `<div class="muted" style="padding:24px 0;text-align:center">${i18n[currentLang].noExpensesYet}</div>`;
-  } else {
-    const topups=indexed.filter(r=>r.type==='topup');
-    historyGroups.innerHTML=topups.length
-      ? `<div class="panel" style="margin-top:0">${topups.map(r=>renderTopup(r,r._idx)).join('')}</div>`
-      : `<div class="muted" style="padding:24px 0;text-align:center">${i18n[currentLang].noTopUpsYet}</div>`;
-  }
+      </div>
+      <div class="panel" style="margin-top:0">${day.map(r=>renderExpense(r,r._idx)).join('')}</div>
+    </div>`;
+  }).join('') : `<div class="muted" style="padding:24px 0;text-align:center">${i18n[currentLang].noExpensesYet}</div>`;
 }
 
 async function joinWallet(){

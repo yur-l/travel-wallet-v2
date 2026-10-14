@@ -480,7 +480,7 @@ body.dark .sheet-grabber{background:#3c4d56}
 
 /* V8: categories, filters, join requests, recently deleted */
 .category-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.category-choice{height:42px;border:1.5px solid var(--line);border-radius:13px;background:var(--card);color:var(--text);font-weight:850;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 8px}
+.category-choice{height:42px;border:1.5px solid var(--line);border-radius:13px;background:var(--card);color:var(--text);font-size:13px;font-weight:850;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 6px;min-width:0;white-space:nowrap}
 .category-choice.active{border-color:currentColor;box-shadow:0 0 0 2px rgba(15,119,117,.08)}
 .category-choice.food{color:#b16f22;background:rgba(213,155,53,.08)}
 .category-choice.transport{color:#2f6b9a;background:rgba(47,107,154,.08)}
@@ -493,7 +493,8 @@ body.dark .sheet-grabber{background:#3c4d56}
 .tx-category.topup-static{background:rgba(25,163,109,.12);color:var(--green);font-weight:950}
 .clear-filter{border:0;background:transparent;color:var(--danger);font-size:12px;font-weight:900;padding:7px 0}
 .record-title-actions{display:flex;align-items:center;gap:10px}
-.history-filter-row{min-height:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:-8px;margin-bottom:8px}
+.history-filter-hint{font-size:12px;line-height:1.4;margin:-2px 0 8px}
+.history-filter-row{min-height:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;font-size:13px}
 .request-badge{display:inline-flex;align-items:center;background:var(--green);color:#fff;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:900;line-height:1.25}
 .wallet-card-deleted{filter:grayscale(1);opacity:.78;background:#eceeed;box-shadow:none;border-color:#d9dddc;cursor:default}
 .wallet-card-deleted .deleted-symbol{background:#9aa3a7}
